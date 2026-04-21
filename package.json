@@ -1,0 +1,19 @@
+{
+  "name": "fincen-demo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "FinCEN Signal-to-Decision demo (static HTML/JS).",
+  "scripts": {
+    "serve": "serve -p 4173 -s .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "test:all": "npm test && npm run test:e2e"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.48.0",
+    "jsdom": "^25.0.1",
+    "serve": "^14.2.4",
+    "vitest": "^2.1.4"
+  }
+}

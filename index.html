@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>FinCEN Signal-to-Decision Enterprise Analytics Platform</title>
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="title-group">
+          <h1>FinCEN Signal-to-Decision Enterprise Analytics Platform</h1>
+          <p class="subtitle">Ingestion → Detection → Routing → Analyst Decision → Governed Audit</p>
+        </div>
+        <div class="topbar-actions">
+          <span class="badge" id="model-version-badge">Model v3.2.4</span>
+          <button class="btn accent" id="launch-guide-btn">Guide Demo</button>
+        </div>
+      </header>
+
+      <nav class="tab-nav" id="tab-nav">
+        <button class="tab-btn active" data-screen="screen-pipeline">Data Pipeline</button>
+        <button class="tab-btn" data-screen="screen-signals">Signal Engineering</button>
+        <button class="tab-btn" data-screen="screen-analytics">Analytics &amp; Detection</button>
+        <button class="tab-btn" data-screen="screen-triage">Risk Scoring &amp; Triage</button>
+        <button class="tab-btn" data-screen="screen-workspace">Analyst Workspace</button>
+        <button class="tab-btn" data-screen="screen-enterprise">Enterprise Deployment &amp; Modular Expansion</button>
+      </nav>
+
+      <div class="kpi-strip">
+        <div class="kpi-item"><span class="kpi-value" id="kpi-total-cases">0</span><span class="kpi-label">Total Cases</span></div>
+        <div class="kpi-item"><span class="kpi-value" id="kpi-enforcement">0</span><span class="kpi-label">Enforcement Referrals</span></div>
+        <div class="kpi-item"><span class="kpi-value" id="kpi-intelligence">0</span><span class="kpi-label">Intelligence Queue</span></div>
+        <div class="kpi-item"><span class="kpi-value" id="kpi-average-risk">0</span><span class="kpi-label">Average Risk</span></div>
+        <div class="kpi-item"><span class="kpi-value" id="kpi-bias">Green</span><span class="kpi-label">Bias Status</span></div>
+      </div>
+
+      <main>
+        <section class="screen active" id="screen-pipeline">
+          <p class="screen-header">Six heterogeneous datasets are ingested and fused into a unified intelligence graph with lineage and freshness controls.</p>
+          <div class="layout-grid">
+            <div class="card">
+              <h3>Ingestion Sources</h3>
+              <div class="source-grid" id="source-grid"></div>
+            </div>
+
+            <div class="layout-grid cols-2">
+              <div class="card">
+                <h3>Batch + Stream Ingestion</h3>
+                <div class="metric-row">
+                  <span class="muted">Batch ingestion progress</span>
+                  <span id="batch-progress-label">0%</span>
+                </div>
+                <div class="progress-wrap"><div class="progress-bar" id="batch-progress-bar"></div></div>
+                <div class="spacer-md"></div>
+                <div class="stream-toggle">
+                  <input type="checkbox" id="stream-toggle" checked />
+                  <label for="stream-toggle" style="margin: 0">Real-time feed active</label>
+                </div>
+                <div class="metric-row">
+                  <span class="muted">Streaming events received</span>
+                  <span id="stream-count">0</span>
+                </div>
+                <div class="metric-row">
+                  <span class="muted">Data freshness</span>
+                  <span id="freshness-indicator">-</span>
+                </div>
+              </div>
+              <div class="card" id="entity-resolution-card">
+                <h3>Entity Resolution &amp; Fusion</h3>
+                <div class="metric-row"><span class="muted">Before merge</span><span id="before-merge-count">-</span></div>
+                <div class="metric-row"><span class="muted">After merge</span><span id="after-merge-count">-</span></div>
+                <div id="merge-list"></div>
+              </div>
+            </div>
+
+            <div class="layout-grid cols-2">
+              <div class="card">
+                <h3>Relationship Graph Preview</h3>
+                <canvas class="mini-canvas" id="pipeline-graph-canvas"></canvas>
+              </div>
+              <div class="card">
+                <h3>Source Lineage</h3>
+                <p class="muted">Hover source cards for lineage details (source, timestamp, transformation).</p>
+                <div id="lineage-panel" class="muted">Select or hover a source card to inspect lineage.</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="screen" id="screen-signals">
+          <p class="screen-header">Raw financial events are transformed into reusable, explainable risk features for case-level prioritization.</p>
+          <div class="layout-grid cols-2">
+            <div class="card">
+              <h3>Derived Signal Table</h3>
+              <table>
+                <thead>
+                  <tr>
+                    <th>Entity</th>
+                    <th>Velocity</th>
+                    <th>Jurisdiction</th>
+                    <th>Ownership</th>
+                    <th>Peer Dev</th>
+                    <th>Typology</th>
+                    <th>Cross-Border</th>
+                  </tr>
+                </thead>
+                <tbody id="feature-table-body"></tbody>
+              </table>
+            </div>
+            <div class="card">
+              <h3>Selected Entity Details</h3>
+              <div id="feature-detail">Select an entity row to inspect raw inputs, derived features, and enrichment sources.</div>
+              <div class="spacer-md"></div>
+              <h4>Velocity Sparkline</h4>
+              <canvas class="mini-canvas" id="velocity-sparkline"></canvas>
+              <h4 class="sparkline-heading">Peer Deviation Sparkline</h4>
+              <canvas class="mini-canvas" id="deviation-sparkline"></canvas>
+            </div>
+          </div>
+        </section>
+
+        <section class="screen" id="screen-analytics">
+          <p class="screen-header">Network and anomaly analytics distill complex activity into defensible case signals with transparent rationale.</p>
+          <div class="layout-grid cols-2">
+            <div class="card">
+              <h3>Entity Relationship Network</h3>
+              <canvas class="graph-canvas" id="analytics-graph-canvas"></canvas>
+              <div id="analytics-legend-host"></div>
+              <p class="graph-hint muted">Click a node for details. Shift+click a second node to trace the shortest fund-flow path. Drag to move. Wheel or +/- to zoom. 0 to reset.</p>
+            </div>
+            <div class="card">
+              <h3>Anomaly Heatmap</h3>
+              <div class="heatmap" id="heatmap-container"></div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top: 16px">
+            <div class="metric-row">
+              <h3 style="margin: 0">Flagged Case Patterns</h3>
+              <div id="typology-filter-group"></div>
+            </div>
+            <div class="case-cards" id="case-cards-container"></div>
+          </div>
+          <div id="entity-panel-host"></div>
+        </section>
+
+        <section class="screen" id="screen-triage">
+          <p class="screen-header">Deterministic policy thresholds govern automated routing to intelligence, enforcement, analyst review, or monitoring.</p>
+          <div class="card">
+            <h3>Policy Threshold Controls</h3>
+            <div class="control-row">
+              <div>
+                <label for="high-risk-slider">High Risk Threshold: <span id="high-risk-value">85</span></label>
+                <input id="high-risk-slider" type="range" min="70" max="95" step="1" value="85" />
+              </div>
+              <div>
+                <label for="confidence-slider">Confidence Threshold: <span id="confidence-value">75</span></label>
+                <input id="confidence-slider" type="range" min="55" max="95" step="1" value="75" />
+              </div>
+              <div>
+                <label for="jurisdiction-slider">Jurisdiction Weight: <span id="jurisdiction-value">1.0</span></label>
+                <input id="jurisdiction-slider" type="range" min="0.5" max="1.5" step="0.1" value="1" />
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top: 16px">
+            <h3>Automated Decision Path</h3>
+            <div class="decision-path" id="decision-path"></div>
+          </div>
+
+          <div class="card" style="margin-top: 16px">
+            <h3>Risk vs Confidence Decision Space</h3>
+            <canvas class="mini-canvas" id="triage-scatter-canvas"></canvas>
+          </div>
+
+          <div class="routing-board" id="routing-board" style="margin-top: 16px"></div>
+        </section>
+
+        <section class="screen" id="screen-workspace">
+          <p class="screen-header">Analysts review model evidence, apply controlled overrides, and generate auditable decision records.</p>
+          <div class="workspace-layout">
+            <div class="card">
+              <h3>Analyst Review Workspace</h3>
+              <label for="workspace-case-select">Case</label>
+              <select id="workspace-case-select"></select>
+              <div class="spacer-sm"></div>
+              <div class="evidence-grid" id="evidence-grid"></div>
+              <div class="spacer-lg"></div>
+              <label for="override-score">Override Risk Score</label>
+              <input id="override-score" type="number" min="0" max="100" />
+              <div class="spacer-sm"></div>
+              <label for="override-rationale">Rationale</label>
+              <textarea id="override-rationale" rows="3" placeholder="Provide analyst rationale..."></textarea>
+              <div class="spacer-sm"></div>
+              <button class="btn accent" id="apply-override-btn">Apply Override</button>
+              <div class="spacer-sm"></div>
+              <button class="btn" id="generate-report-btn">Generate Report</button>
+              <div class="spacer-sm"></div>
+              <div class="confirm-bar" id="workspace-confirm-bar">
+                <span id="confirm-message">Confirm action?</span>
+                <div class="confirm-actions">
+                  <button class="btn" id="confirm-yes-btn">Confirm</button>
+                  <button class="btn" id="confirm-no-btn">Cancel</button>
+                </div>
+              </div>
+              <div class="spacer-sm"></div>
+              <div class="action-buttons">
+                <button class="btn" data-action="escalate_intelligence">Escalate to Intelligence</button>
+                <button class="btn" data-action="refer_enforcement">Refer to Enforcement</button>
+                <button class="btn" data-action="return_monitoring">Return to Monitoring</button>
+                <button class="btn" data-action="close_case">Close Case</button>
+              </div>
+            </div>
+
+            <div class="layout-grid">
+              <div class="card">
+                <h3>Governance Controls</h3>
+                <div class="metric-row"><span class="muted">Model Version</span><span id="workspace-model-version">v3.2.4</span></div>
+                <div class="metric-row"><span class="muted">Bias Monitor</span><span id="bias-indicator" class="pill risk-low">Green</span></div>
+                <div id="bias-detail" class="bias-detail"></div>
+                <div class="metric-row"><span class="muted">Validation</span><span class="pill risk-low">Current</span></div>
+                <ul class="gov-list">
+                  <li><input type="checkbox" checked /> Evidence reviewed</li>
+                  <li><input type="checkbox" checked /> Model explanation reviewed</li>
+                  <li><input type="checkbox" /> Policy exception documented</li>
+                  <li><input type="checkbox" /> Supervisory notification completed</li>
+                </ul>
+              </div>
+
+              <div class="card">
+                <h3>Decision Audit Trail</h3>
+                <div class="audit-log" id="audit-log"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="screen" id="screen-enterprise">
+          <p class="screen-header">A centralized enterprise backbone supports modular mission extensions without duplicating core platform services.</p>
+          <div class="card">
+            <h3>Enterprise Deployment &amp; Modular Expansion</h3>
+            <p class="muted">Select a mission module to see which enterprise capabilities it leverages.</p>
+            <div class="module-layout">
+              <div class="module-column" id="core-capabilities"></div>
+              <svg class="connector-svg" id="module-connectors"></svg>
+              <div class="module-column" id="mission-modules"></div>
+            </div>
+            <div class="callout">Centralized enterprise backbone. Configurable mission extensions.</div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <div class="guide-overlay" id="guide-overlay">
+      <div class="guide-card">
+        <h3 id="guide-title">Demo Guide</h3>
+        <p id="guide-body" class="muted"></p>
+        <div class="guide-controls">
+          <button class="btn" id="guide-prev-btn">Previous</button>
+          <button class="btn" id="guide-next-btn">Next</button>
+          <button class="btn accent" id="guide-close-btn">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="js/data.js"></script>
+    <script src="js/demo-fixtures.js"></script>
+    <script src="js/engine.js"></script>
+    <script src="js/visualizations.js"></script>
+    <script src="js/pattern-detection.js"></script>
+    <script src="js/path-tracing.js"></script>
+    <script src="js/entity-panel.js"></script>
+    <script src="js/legend.js"></script>
+    <script src="js/graph-interactions.js"></script>
+    <script src="js/app.js"></script>
+  </body>
+</html>
