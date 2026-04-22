@@ -562,10 +562,23 @@
     ctx.fillText(String(Math.round(value)), cx, cy - 10);
   }
 
-  function drawSparkline(canvas, values) {
+  function drawSparkline(canvas, values, options) {
     if (!canvas || !values || !values.length) {
       return;
     }
+    const opts = options || {};
+
+    if (opts.ariaLabel) {
+      canvas.setAttribute("aria-label", opts.ariaLabel);
+      canvas.setAttribute("role", "img");
+    }
+    if (opts.tooltip !== false && (opts.yLabel || opts.xLabel)) {
+      const parts = [];
+      if (opts.yLabel) parts.push("y: " + opts.yLabel);
+      if (opts.xLabel) parts.push("x: " + opts.xLabel);
+      canvas.setAttribute("title", parts.join(" \u2022 "));
+    }
+
     const ctx = canvas.getContext("2d");
     const dpr = window.devicePixelRatio || 1;
     const rect = canvas.getBoundingClientRect();
@@ -577,14 +590,28 @@
     const min = Math.min.apply(null, values);
     const max = Math.max.apply(null, values);
     const span = Math.max(1, max - min);
-    const step = rect.width / (values.length - 1);
+    const step = rect.width / Math.max(1, values.length - 1);
+
+    if (opts.showZeroLine && min < 0 && max > 0) {
+      const zeroY = rect.height - ((0 - min) / span) * (rect.height - 4) - 2;
+      ctx.strokeStyle = "rgba(170, 155, 130, 0.35)";
+      ctx.lineWidth = 0.8;
+      ctx.setLineDash([2, 3]);
+      ctx.beginPath();
+      ctx.moveTo(0, zeroY);
+      ctx.lineTo(rect.width, zeroY);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
 
     ctx.strokeStyle = PALETTE.accent;
     ctx.lineWidth = 1.6;
+    const points = [];
     ctx.beginPath();
     values.forEach((v, i) => {
       const x = i * step;
       const y = rect.height - ((v - min) / span) * (rect.height - 4) - 2;
+      points.push({ x, y, value: v });
       if (i === 0) {
         ctx.moveTo(x, y);
       } else {
@@ -592,6 +619,22 @@
       }
     });
     ctx.stroke();
+
+    // Point markers so each bucket is visibly discrete.
+    ctx.fillStyle = PALETTE.accent;
+    points.forEach((p) => {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 2, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    canvas.__sparklinePoints = points;
+    canvas.__sparklineMeta = {
+      labels: opts.pointLabels || null,
+      yUnit: opts.yLabel || "",
+      xRange: opts.xLabel || ""
+    };
+    return points;
   }
 
   function drawScatter(canvas, cases, policy) {

@@ -27,6 +27,16 @@
     featureDetail: document.getElementById("feature-detail"),
     velocitySparkline: document.getElementById("velocity-sparkline"),
     deviationSparkline: document.getElementById("deviation-sparkline"),
+    velocitySparklineCaption: document.getElementById("velocity-sparkline-caption"),
+    deviationSparklineCaption: document.getElementById("deviation-sparkline-caption"),
+    velocitySparklineUnit: document.getElementById("velocity-sparkline-unit"),
+    deviationSparklineUnit: document.getElementById("deviation-sparkline-unit"),
+    velocitySparklineXstart: document.getElementById("velocity-sparkline-xstart"),
+    velocitySparklineXend: document.getElementById("velocity-sparkline-xend"),
+    deviationSparklineXstart: document.getElementById("deviation-sparkline-xstart"),
+    deviationSparklineXend: document.getElementById("deviation-sparkline-xend"),
+    velocitySparklineTooltip: document.getElementById("velocity-sparkline-tooltip"),
+    deviationSparklineTooltip: document.getElementById("deviation-sparkline-tooltip"),
 
     analyticsGraphCanvas: document.getElementById("analytics-graph-canvas"),
     heatmapContainer: document.getElementById("heatmap-container"),
@@ -155,6 +165,25 @@
       return "risk-medium";
     }
     return "risk-low";
+  }
+
+  const TYPOLOGY_PILL_CLASS = {
+    "Structuring": "risk-low",
+    "TBML": "risk-medium",
+    "Sanctions Evasion": "risk-medium",
+    "Crypto Layering": "risk-high",
+    "Unusual Velocity": "risk-high"
+  };
+
+  function typologyPillClass(typology) {
+    return TYPOLOGY_PILL_CLASS[typology] || "risk-low";
+  }
+
+  function formatSigned(value, decimals) {
+    if (value == null || isNaN(value)) return "0";
+    const d = decimals == null ? 1 : decimals;
+    const sign = value > 0 ? "+" : (value < 0 ? "" : "");
+    return sign + value.toFixed(d);
   }
 
   const SOURCE_ICON_BY_ID = {
@@ -291,14 +320,17 @@
     const features = engine.getDerivedFeatures();
     ui.featureTableBody.innerHTML = "";
     features.forEach((f) => {
+      const series = engine.getSignalSeries(f.caseId);
+      const txPerDay = series ? series.summary.txPerDay : 0;
+      const peerDevMean = series ? series.summary.peerDeviationMean : 0;
       const tr = document.createElement("tr");
       tr.innerHTML =
         "<td>" + f.entityName + "</td>" +
-        "<td>" + f.derived.transactionVelocityScore + "</td>" +
+        "<td>" + txPerDay.toFixed(2) + " tx/day</td>" +
         "<td>" + f.derived.jurisdictionRiskScore + "</td>" +
         "<td>" + f.derived.beneficialOwnershipNetworkScore + "</td>" +
-        "<td>" + f.derived.peerGroupDeviation + "</td>" +
-        "<td><span class='pill " + scoreClass(f.riskScore) + "'>" + f.typologyTag + "</span></td>" +
+        "<td>" + formatSigned(peerDevMean, 1) + "\u03c3</td>" +
+        "<td><span class='pill " + typologyPillClass(f.typologyTag) + "'>" + f.typologyTag + "</span></td>" +
         "<td>" + (f.derived.crossBorderExposureFlag ? "Yes" : "No") + "</td>";
       tr.addEventListener("click", () => {
         appState.selectedFeatureCase = f.caseId;
@@ -322,18 +354,100 @@
     if (!detail) {
       return;
     }
+    const series = engine.getSignalSeries(detail.caseId);
+    const txPerDay = series ? series.summary.txPerDay.toFixed(2) : "n/a";
+    const peerDevMean = series ? formatSigned(series.summary.peerDeviationMean, 2) : "n/a";
+    const peerDevPeak = series ? series.summary.peerDeviationPeakAbs.toFixed(2) : "n/a";
     ui.featureDetail.innerHTML =
       "<div class='metric-row'><span class='muted'>Case</span><span>" + detail.caseId + "</span></div>" +
       "<div class='metric-row'><span class='muted'>Entity</span><span>" + detail.entityName + "</span></div>" +
       "<div class='metric-row'><span class='muted'>Typology</span><span>" + detail.typologyTag + "</span></div>" +
       "<div class='metric-row'><span class='muted'>Raw Inputs</span><span>" + detail.rawInputs.join("; ") + "</span></div>" +
-      "<div class='metric-row'><span class='muted'>Derived</span><span>Velocity " + detail.derived.transactionVelocityScore + ", Jurisdiction " + detail.derived.jurisdictionRiskScore + "</span></div>" +
+      "<div class='metric-row'><span class='muted'>Velocity</span><span>" + txPerDay + " tx/day</span></div>" +
+      "<div class='metric-row'><span class='muted'>Peer Deviation</span><span>mean " + peerDevMean + "\u03c3 \u2022 peak " + peerDevPeak + "\u03c3 (cohort: " + (series ? series.peerDeviation.peerGroup : "n/a") + ")</span></div>" +
       "<div class='metric-row'><span class='muted'>Enrichment</span><span>" + detail.enrichmentSources.join(", ") + "</span></div>";
 
-    const v = detail.derived.transactionVelocityScore;
-    const d = detail.derived.peerGroupDeviation;
-    window.FinCENViz.drawSparkline(ui.velocitySparkline, [v - 20, v - 13, v - 6, v - 3, v, v + 4, v - 2]);
-    window.FinCENViz.drawSparkline(ui.deviationSparkline, [d - 9, d - 2, d + 4, d - 3, d + 6, d + 1, d]);
+    if (!series) {
+      return;
+    }
+    const firstLabel = series.bucketLabels[0];
+    const lastLabel = series.bucketLabels[series.bucketLabels.length - 1];
+    const xRange = firstLabel + " \u2192 " + lastLabel;
+    const vPeak = Math.max.apply(null, series.velocity.values.concat([0]));
+    const dAbsPeak = Math.max.apply(null, series.peerDeviation.values.map(Math.abs).concat([0]));
+
+    window.FinCENViz.drawSparkline(ui.velocitySparkline, series.velocity.values, {
+      yLabel: series.velocity.unit,
+      xLabel: xRange,
+      pointLabels: series.bucketLabels,
+      ariaLabel: detail.entityName + " transaction velocity across " + series.bucketLabels.length + " windows " + firstLabel + " to " + lastLabel + "; peak " + vPeak + " " + series.velocity.unit + "; total tx/day " + series.summary.txPerDay.toFixed(2)
+    });
+    window.FinCENViz.drawSparkline(ui.deviationSparkline, series.peerDeviation.values, {
+      yLabel: series.peerDeviation.unit,
+      xLabel: xRange,
+      pointLabels: series.bucketLabels,
+      showZeroLine: true,
+      ariaLabel: detail.entityName + " peer deviation versus cohort " + series.peerDeviation.peerGroup + " across " + series.bucketLabels.length + " windows " + firstLabel + " to " + lastLabel + "; maximum absolute deviation " + dAbsPeak.toFixed(2) + " " + series.peerDeviation.unit
+    });
+
+    if (ui.velocitySparklineUnit) ui.velocitySparklineUnit.textContent = series.velocity.unit;
+    if (ui.deviationSparklineUnit) ui.deviationSparklineUnit.textContent = series.peerDeviation.unit;
+    if (ui.velocitySparklineXstart) ui.velocitySparklineXstart.textContent = firstLabel;
+    if (ui.velocitySparklineXend) ui.velocitySparklineXend.textContent = lastLabel;
+    if (ui.deviationSparklineXstart) ui.deviationSparklineXstart.textContent = firstLabel;
+    if (ui.deviationSparklineXend) ui.deviationSparklineXend.textContent = lastLabel;
+    if (ui.velocitySparklineCaption) {
+      ui.velocitySparklineCaption.textContent = "Peak: " + vPeak + " tx in window \u2022 " + series.bucketLabels.length + " windows \u00d7 " + series.bucketDays + " days";
+    }
+    if (ui.deviationSparklineCaption) {
+      ui.deviationSparklineCaption.textContent = "Cohort: " + series.peerDeviation.peerGroup + " \u2022 max |deviation| " + dAbsPeak.toFixed(2) + "\u03c3 \u2022 " + series.bucketLabels.length + " windows";
+    }
+
+    attachSparklineHover(ui.velocitySparkline, ui.velocitySparklineTooltip, series.velocity.unit, false);
+    attachSparklineHover(ui.deviationSparkline, ui.deviationSparklineTooltip, series.peerDeviation.unit, true);
+  }
+
+  function attachSparklineHover(canvas, tooltipEl, unit, isSigned) {
+    if (!canvas || !tooltipEl) return;
+    if (canvas.__hoverAttached) return;
+    canvas.__hoverAttached = true;
+
+    const onMove = (ev) => {
+      const points = canvas.__sparklinePoints;
+      const meta = canvas.__sparklineMeta || {};
+      if (!points || !points.length) {
+        tooltipEl.style.opacity = "0";
+        return;
+      }
+      const rect = canvas.getBoundingClientRect();
+      const cx = ev.clientX - rect.left;
+      const cy = ev.clientY - rect.top;
+      let nearest = points[0];
+      let bestDx = Math.abs(points[0].x - cx);
+      for (let i = 1; i < points.length; i += 1) {
+        const dx = Math.abs(points[i].x - cx);
+        if (dx < bestDx) { bestDx = dx; nearest = points[i]; }
+      }
+      const idx = points.indexOf(nearest);
+      const label = (meta.labels && meta.labels[idx]) ? meta.labels[idx] : ("Window " + (idx + 1));
+      const v = nearest.value;
+      const valueStr = isSigned
+        ? (v > 0 ? "+" : (v < 0 ? "" : "")) + v.toFixed(2)
+        : String(v);
+      tooltipEl.innerHTML =
+        "<strong>" + valueStr + "</strong> " + unit +
+        "<span class='sparkline-tooltip-sub'>" + label + "</span>";
+      tooltipEl.style.left = Math.max(0, Math.min(rect.width - 120, nearest.x - 60)) + "px";
+      tooltipEl.style.top = Math.max(-34, nearest.y - 40) + "px";
+      tooltipEl.style.opacity = "1";
+      canvas.style.cursor = "crosshair";
+    };
+    const onLeave = () => {
+      tooltipEl.style.opacity = "0";
+      canvas.style.cursor = "";
+    };
+    canvas.addEventListener("mousemove", onMove);
+    canvas.addEventListener("mouseleave", onLeave);
   }
 
   let analyticsGraphCache = { graph: { nodes: [], edges: [] }, risk: {}, overlay: { mixers: [], shellChains: [], disposableClusters: [], sanctionedIds: [] }, pathSource: null, hasPath: false };
@@ -367,14 +481,16 @@
       riskByEntity[r.entityId] = r.riskScore;
     });
 
-    const graph = engine.getGraph();
+    const graph = engine.getFilteredGraph();
     analyticsGraphCache = { graph, risk: riskByEntity };
 
     if (window.FinCENPatternDetection && window.FinCENViz.setPatternOverlay) {
       const sanctionedNames = new Set((data.sanctionsList || []).map((s) => s.name));
+      const survivingIds = new Set(graph.nodes.map((n) => n.id));
       const sanctionedIds = data.entities
         .filter((e) => sanctionedNames.has(e.name) || (e.aliases || []).some((a) => sanctionedNames.has(a)))
-        .map((e) => e.id);
+        .map((e) => e.id)
+        .filter((id) => survivingIds.has(id));
       const overlay = {
         shellChains: window.FinCENPatternDetection.detectShellChains(graph),
         mixers: window.FinCENPatternDetection.detectMixers(graph),
@@ -385,6 +501,7 @@
       analyticsGraphCache.overlay = overlay;
     }
 
+    renderAnalyticsEmptyState(graph);
     window.FinCENViz.drawGraph(ui.analyticsGraphCanvas, graph, riskByEntity);
     if (window.FinCENGraphA11y) {
       window.FinCENGraphA11y.update(graph, analyticsGraphCache.overlay);
@@ -462,16 +579,45 @@
       const b = document.createElement("button");
       b.className = "btn";
       b.textContent = t;
+      b.setAttribute("aria-pressed", engine.getState().selectedTypology === t ? "true" : "false");
       if (engine.getState().selectedTypology === t) {
         b.classList.add("accent");
       }
       b.addEventListener("click", () => {
         engine.setTypologyFilter(t);
+        // Clear any stale path/source state tied to nodes that may now be filtered out.
+        if (window.FinCENViz.setPathHighlight) window.FinCENViz.setPathHighlight(null);
+        analyticsGraphCache.pathSource = null;
+        analyticsGraphCache.hasPath = false;
         renderAnalytics();
         renderRouting();
       });
       ui.typologyFilterGroup.appendChild(b);
     });
+  }
+
+  function renderAnalyticsEmptyState(graph) {
+    const card = ui.analyticsGraphCanvas ? ui.analyticsGraphCanvas.closest(".card") : null;
+    if (!card) return;
+    let empty = card.querySelector(".graph-empty-state");
+    const isEmpty = !graph || !graph.nodes || graph.nodes.length === 0;
+    if (isEmpty) {
+      if (!empty) {
+        empty = document.createElement("div");
+        empty.className = "graph-empty-state";
+        empty.setAttribute("role", "status");
+        empty.setAttribute("aria-live", "polite");
+        card.appendChild(empty);
+      }
+      const typology = engine.getState().selectedTypology;
+      empty.textContent = "No entities match the \u201C" + typology + "\u201D pattern. Select \u201CAll\u201D to restore the full network.";
+      ui.analyticsGraphCanvas.setAttribute("aria-hidden", "true");
+      ui.analyticsGraphCanvas.style.visibility = "hidden";
+    } else {
+      if (empty) empty.remove();
+      ui.analyticsGraphCanvas.setAttribute("aria-hidden", "false");
+      ui.analyticsGraphCanvas.style.visibility = "";
+    }
   }
 
   function renderCaseCards(routingResults) {

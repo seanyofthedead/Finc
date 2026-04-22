@@ -164,6 +164,44 @@
     return { nodes, edges };
   }
 
+  // Narrow the full graph to entities tied to the given typology plus their direct
+  // transaction counterparties. Pure: derives a new { nodes, edges } view without
+  // mutating source data. Returns the full graph when typology is falsy or "All".
+  // Builds edges directly from transactions within the filtered node set so the
+  // full-graph 60-edge cap doesn't starve the filtered view of relevant edges.
+  function filterGraphByTypology(data, typology) {
+    if (!typology || typology === "All") return buildGraph(data);
+
+    const subjectIds = new Set(
+      (data.flaggedCases || [])
+        .filter((c) => c.typology === typology)
+        .map((c) => c.entityId)
+    );
+    if (subjectIds.size === 0) return { nodes: [], edges: [] };
+
+    const includedIds = new Set(subjectIds);
+    (data.transactions || []).forEach((tx) => {
+      if (subjectIds.has(tx.fromEntityId)) includedIds.add(tx.toEntityId);
+      if (subjectIds.has(tx.toEntityId)) includedIds.add(tx.fromEntityId);
+    });
+
+    const nodes = (data.entities || [])
+      .filter((e) => includedIds.has(e.id))
+      .map((e) => ({ id: e.id, label: e.name, group: e.kind, jurisdiction: e.jurisdiction }));
+
+    const edgeMap = {};
+    (data.transactions || []).forEach((tx) => {
+      if (!includedIds.has(tx.fromEntityId) || !includedIds.has(tx.toEntityId)) return;
+      const key = tx.fromEntityId + "->" + tx.toEntityId;
+      if (!edgeMap[key]) {
+        edgeMap[key] = { from: tx.fromEntityId, to: tx.toEntityId, weight: 0, crossBorder: tx.isCrossBorder };
+      }
+      edgeMap[key].weight += 1;
+    });
+    const edges = Object.values(edgeMap).slice(0, 60);
+    return { nodes, edges };
+  }
+
   function buildHeatmap(data) {
     const typologies = ["Structuring", "TBML", "Sanctions Evasion", "Crypto Layering", "Unusual Velocity"];
     const jurisdictions = Object.keys(data.jurisdictionRisk);
@@ -226,6 +264,150 @@
     return { typologies, jurisdictions, matrix };
   }
 
+  function medianOf(arr) {
+    if (!arr || !arr.length) return 0;
+    const sorted = arr.slice().sort((a, b) => a - b);
+    const mid = Math.floor(sorted.length / 2);
+    return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
+  }
+
+  function madOf(arr, median) {
+    if (!arr || !arr.length) return 0;
+    const deviations = arr.map((v) => Math.abs(v - median));
+    return medianOf(deviations);
+  }
+
+  function computeBucketStats(data) {
+    const BUCKETS = 8;
+    const dayMs = 24 * 60 * 60 * 1000;
+    const times = (data.transactions || [])
+      .map((tx) => new Date(tx.timestamp).getTime())
+      .filter((t) => !isNaN(t));
+    const byEntity = {};
+    (data.entities || []).forEach((e) => {
+      byEntity[e.id] = new Array(BUCKETS).fill(0);
+    });
+    const firstTx = {};
+    const lastTx = {};
+    if (!times.length) {
+      return { buckets: BUCKETS, bucketMs: 0, minTs: 0, maxTs: 0, bucketDays: 0, byEntity, firstTx, lastTx };
+    }
+    const minTs = Math.min.apply(null, times);
+    const maxTs = Math.max.apply(null, times);
+    const span = Math.max(1, maxTs - minTs);
+    const bucketMs = span / BUCKETS;
+    const bucketDays = Math.max(1, Math.round(bucketMs / dayMs));
+
+    data.transactions.forEach((tx) => {
+      const t = new Date(tx.timestamp).getTime();
+      if (isNaN(t)) return;
+      const bIdx = Math.min(BUCKETS - 1, Math.floor((t - minTs) / bucketMs));
+      [tx.fromEntityId, tx.toEntityId].forEach((eid) => {
+        if (!byEntity[eid]) return;
+        byEntity[eid][bIdx] += 1;
+        if (firstTx[eid] === undefined || t < firstTx[eid]) firstTx[eid] = t;
+        if (lastTx[eid] === undefined || t > lastTx[eid]) lastTx[eid] = t;
+      });
+    });
+
+    return { buckets: BUCKETS, bucketMs, minTs, maxTs, bucketDays, byEntity, firstTx, lastTx };
+  }
+
+  function buildSignalSeries(data, caseId, stats) {
+    const caseRecord = (data.flaggedCases || []).find((c) => c.caseId === caseId);
+    if (!caseRecord) return null;
+    const entityIndex = indexById(data.entities || []);
+    const entity = entityIndex[caseRecord.entityId];
+    if (!entity) return null;
+
+    const { buckets, byEntity, firstTx, lastTx, minTs, bucketMs, bucketDays } = stats;
+    const dayMs = 24 * 60 * 60 * 1000;
+    const velocityValues = (byEntity[entity.id] || new Array(buckets).fill(0)).slice();
+
+    let peers = (data.entities || []).filter((e) => e.kind === entity.kind && e.id !== entity.id);
+    let peerGroupLabel = "kind=" + entity.kind;
+    const MIN_PEER_COUNT = 2;
+    const peerCohortCounts = () => peers.map((p) => (byEntity[p.id] || []).reduce((a, b) => a + b, 0));
+    const cohortMad = () => {
+      const totals = peerCohortCounts();
+      return madOf(totals, medianOf(totals));
+    };
+    // Expand cohort when it is too small OR too homogeneous/idle to be a yardstick
+    // (otherwise the MAD collapses to zero and the z-score degenerates to raw velocity).
+    if (peers.length < MIN_PEER_COUNT || cohortMad() < 1) {
+      peers = (data.entities || []).filter((e) => e.id !== entity.id);
+      peerGroupLabel = "all entities (" + entity.kind + " cohort degenerate)";
+    }
+    const deviationValues = velocityValues.map((ev, b) => {
+      const peerCounts = peers.map((p) => (byEntity[p.id] || [])[b] || 0);
+      const med = medianOf(peerCounts);
+      const mad = Math.max(1, madOf(peerCounts, med));
+      return round((ev - med) / mad);
+    });
+
+    const entityTotalTx = velocityValues.reduce((a, b) => a + b, 0);
+    const eFirst = firstTx[entity.id];
+    const eLast = lastTx[entity.id];
+    const activeDays = (eFirst !== undefined && eLast !== undefined && eLast > eFirst)
+      ? Math.max(1, (eLast - eFirst) / dayMs)
+      : 1;
+    const txPerDay = round(entityTotalTx / activeDays);
+
+    const peerTxPerDay = peers.map((p) => {
+      const arr = byEntity[p.id] || [];
+      const total = arr.reduce((a, b) => a + b, 0);
+      const pF = firstTx[p.id];
+      const pL = lastTx[p.id];
+      const pDays = (pF !== undefined && pL !== undefined && pL > pF)
+        ? Math.max(1, (pL - pF) / dayMs)
+        : 1;
+      return total / pDays;
+    });
+    const peerMedTxPerDay = medianOf(peerTxPerDay);
+    const peerMad = Math.max(0.01, madOf(peerTxPerDay, peerMedTxPerDay));
+    const peerZ = round((txPerDay - peerMedTxPerDay) / peerMad);
+
+    // Bucket-level deviation summaries — these mirror what the sparkline plots.
+    const peerDeviationMean = deviationValues.length
+      ? round(deviationValues.reduce((a, b) => a + b, 0) / deviationValues.length)
+      : 0;
+    const peerDeviationPeakAbs = deviationValues.length
+      ? round(Math.max.apply(null, deviationValues.map(Math.abs)))
+      : 0;
+
+    const bucketLabels = velocityValues.map((_, i) => {
+      if (!bucketMs) return "P" + (i + 1);
+      const bStart = new Date(minTs + i * bucketMs);
+      const mm = bStart.getUTCMonth() + 1;
+      const yy = String(bStart.getUTCFullYear()).slice(2);
+      return mm + "/" + yy;
+    });
+
+    return {
+      caseId,
+      bucketDays,
+      bucketLabels,
+      velocity: {
+        values: velocityValues,
+        unit: "tx / " + bucketDays + " days",
+        peakLabel: (Math.max.apply(null, velocityValues.length ? velocityValues : [0])) + " tx"
+      },
+      peerDeviation: {
+        values: deviationValues,
+        unit: "\u03c3 from peer median",
+        peerGroup: peerGroupLabel
+      },
+      summary: {
+        txPerDay,
+        peerMedianTxPerDay: round(peerMedTxPerDay),
+        peerMad: round(peerMad),
+        peerZ,
+        peerDeviationMean,
+        peerDeviationPeakAbs
+      }
+    };
+  }
+
   function createAuditLog(data) {
     const entries = data.historicalOutcomes.map((x) => ({
       id: x.caseId + "-hist",
@@ -251,6 +433,9 @@
       auditLog: createAuditLog(data)
     };
 
+    const bucketStats = computeBucketStats(data);
+    const signalSeriesCache = {};
+
     return {
       getState() {
         return state;
@@ -258,8 +443,17 @@
       getDerivedFeatures() {
         return deriveFeatures(data);
       },
+      getSignalSeries(caseId) {
+        if (!signalSeriesCache[caseId]) {
+          signalSeriesCache[caseId] = buildSignalSeries(data, caseId, bucketStats);
+        }
+        return signalSeriesCache[caseId];
+      },
       getGraph() {
         return buildGraph(data);
+      },
+      getFilteredGraph() {
+        return filterGraphByTypology(data, state.selectedTypology);
       },
       getHeatmap() {
         return buildHeatmap(data);

@@ -12,14 +12,13 @@
     enterprise: '<path d="M8 1.5l6.5 3-6.5 3-6.5-3z"/><path d="M1.5 8l6.5 3 6.5-3"/><path d="M1.5 11.5l6.5 3 6.5-3"/>',
     database:   '<ellipse cx="8" cy="3.5" rx="5.5" ry="1.75"/><path d="M2.5 3.5v9c0 .97 2.46 1.75 5.5 1.75s5.5-.78 5.5-1.75v-9"/><path d="M2.5 8c0 .97 2.46 1.75 5.5 1.75s5.5-.78 5.5-1.75"/>',
     globe:      '<circle cx="8" cy="8" r="6"/><path d="M2 8h12"/><path d="M8 2c2 2 3 4 3 6s-1 4-3 6"/><path d="M8 2c-2 2-3 4-3 6s1 4 3 6"/>',
-    wave:       '<path d="M1.5 5.5c2 0 2 2 4 2s2-2 4-2 2 2 4 2"/><path d="M1.5 9.5c2 0 2 2 4 2s2-2 4-2 2 2 4 2"/>',
     shield:     '<path d="M8 1.5l5.5 2v4c0 3-2.2 5.5-5.5 7-3.3-1.5-5.5-4-5.5-7v-4z"/>',
     bitcoin:    '<circle cx="8" cy="8" r="5.5"/><path d="M6 5.5h3.5M6 10.5h3.5M8 4v8"/>',
     building:   '<path d="M2 5h12v9.5H2z"/><path d="M2 5L8 1.5l6 3.5"/><path d="M5 9v5.5M8 9v5.5M11 9v5.5"/>',
     flag:       '<path d="M3 2v12"/><path d="M3 3h8l-1.5 2.5L11 8H3"/>',
     search:     '<circle cx="7" cy="7" r="4.5"/><path d="M10.5 10.5L14 14"/>',
     sparkle:    '<path d="M8 2v4M8 10v4M2 8h4M10 8h4M4 4.5l2 2M10 9.5l2 2M4 11.5l2-2M10 6.5l2-2"/>',
-    chevron:    '<path d="M6 4l4 4-4 4"/>'
+    info:       '<circle cx="8" cy="8" r="6.25"/><path d="M8 7.25v3.75"/><circle cx="8" cy="5.25" r="0.9" fill="currentColor" stroke="none"/>'
   };
 
   function has(name) {

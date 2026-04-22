@@ -156,10 +156,16 @@
                 <thead>
                   <tr>
                     <th>Entity</th>
-                    <th>Velocity</th>
+                    <th>
+                      <span class="th-label">Velocity <small class="th-unit">(tx/day)</small></span>
+                      <span class="th-info" tabindex="0" data-icon="info" data-icon-size="12" title="Velocity = this entity's transactions per day, averaged across its active window (first tx &#8594; last tx). Higher = more frequent activity."></span>
+                    </th>
                     <th>Jurisdiction</th>
                     <th>Ownership</th>
-                    <th>Peer Dev</th>
+                    <th>
+                      <span class="th-label">Peer Dev <small class="th-unit">(mean &#963;)</small></span>
+                      <span class="th-info" tabindex="0" data-icon="info" data-icon-size="12" title="Peer Deviation = per-window, (entity tx count &minus; peer-cohort median) / peer-cohort MAD. This cell shows the mean across all windows &mdash; the sparkline on the right plots each window. Cohort = same kind (e.g. shell_company); falls back to all entities if the kind cohort is degenerate. 0 = at peer median; +2&#963; = well above peers; &#8722;2&#963; = well below."></span>
+                    </th>
                     <th>Typology</th>
                     <th>Cross-Border</th>
                   </tr>
@@ -171,10 +177,32 @@
               <h3>Selected Entity Details</h3>
               <div id="feature-detail">Select an entity row to inspect raw inputs, derived features, and enrichment sources.</div>
               <div class="spacer-md"></div>
-              <h4>Velocity Sparkline</h4>
-              <canvas class="mini-canvas" id="velocity-sparkline"></canvas>
-              <h4 class="sparkline-heading">Peer Deviation Sparkline</h4>
-              <canvas class="mini-canvas" id="deviation-sparkline"></canvas>
+              <div class="sparkline-block">
+                <div class="sparkline-header">
+                  <h4>Velocity</h4>
+                  <span class="sparkline-badge mono" id="velocity-sparkline-unit"></span>
+                </div>
+                <p class="sparkline-definition" id="velocity-sparkline-definition">Transactions per bucket across the full observed window. Taller = more activity in that window.</p>
+                <div class="sparkline-wrap">
+                  <canvas class="mini-canvas" id="velocity-sparkline"></canvas>
+                  <div class="sparkline-tooltip" id="velocity-sparkline-tooltip" role="status" aria-live="polite"></div>
+                </div>
+                <p class="sparkline-axis mono"><span id="velocity-sparkline-xstart"></span><span>&rarr;</span><span id="velocity-sparkline-xend"></span></p>
+                <p class="sparkline-caption mono" id="velocity-sparkline-caption"></p>
+              </div>
+              <div class="sparkline-block">
+                <div class="sparkline-header">
+                  <h4>Peer Deviation</h4>
+                  <span class="sparkline-badge mono" id="deviation-sparkline-unit"></span>
+                </div>
+                <p class="sparkline-definition" id="deviation-sparkline-definition">Distance from the peer-cohort median in robust-MAD (&#963;-like) units. Zero = at the median; dashed hairline marks zero.</p>
+                <div class="sparkline-wrap">
+                  <canvas class="mini-canvas" id="deviation-sparkline"></canvas>
+                  <div class="sparkline-tooltip" id="deviation-sparkline-tooltip" role="status" aria-live="polite"></div>
+                </div>
+                <p class="sparkline-axis mono"><span id="deviation-sparkline-xstart"></span><span>&rarr;</span><span id="deviation-sparkline-xend"></span></p>
+                <p class="sparkline-caption mono" id="deviation-sparkline-caption"></p>
+              </div>
             </div>
           </div>
         </section>
