@@ -36,6 +36,11 @@ function installFinCEN() {
   loadScriptIntoWindow("js/demo-fixtures.js");
   loadScriptIntoWindow("js/pattern-detection.js");
   loadScriptIntoWindow("js/path-tracing.js");
+  loadScriptIntoWindow("js/motion.js");
+  loadScriptIntoWindow("js/preferences.js");
+  loadScriptIntoWindow("js/icons.js");
+  loadScriptIntoWindow("js/command-palette.js");
+  loadScriptIntoWindow("js/graph-a11y.js");
   loadScriptIntoWindow("js/entity-panel.js");
   loadScriptIntoWindow("js/legend.js");
   loadScriptIntoWindow("js/graph-interactions.js");

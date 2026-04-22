@@ -1,6 +1,27 @@
 (function () {
   "use strict";
 
+  // Warm-palette semantic colors — match :root tokens in css/styles.css.
+  const PALETTE = {
+    high: "#e6695c",
+    medium: "#ddb361",
+    low: "#6ca678",
+    accent: "#eab873",
+    accentWarm: "#f4cf8f",
+    edge: "#c8b496",
+    pathEdge: "#f4cf8f",
+    chainStroke: "#eab873",
+    sanctionedHalo: "rgba(230, 105, 92, 0.65)",
+    mixerPulse: "rgba(234, 184, 115, %a)",
+    heatmapCell: "rgba(234, 184, 115, %a)"
+  };
+
+  function riskColor(score) {
+    if (score >= 85) return PALETTE.high;
+    if (score >= 65) return PALETTE.medium;
+    return PALETTE.low;
+  }
+
   const EMPTY_OVERLAY = { shellChains: [], mixers: [], disposableClusters: [], sanctionedIds: [] };
 
   const vizState = {
@@ -182,10 +203,19 @@
     }
   }
 
-  function drawGraph(canvas, graph, riskByEntity) {
+  function drawGraph(canvas, graph, riskByEntity, opts) {
     if (!canvas || !graph) {
       return;
     }
+    opts = opts || {};
+    const isolated = opts.isolated === true;
+    const layoutStore = isolated ? {} : vizState.layout;
+    const pinnedStore = isolated ? {} : vizState.pinned;
+    const highlightStore = isolated ? null : vizState.highlight;
+    const overlayStore = isolated ? EMPTY_OVERLAY : vizState.overlay;
+    const pathStore = isolated ? null : vizState.path;
+    const cameraStore = isolated ? { x: 0, y: 0, zoom: 1 } : vizState.camera;
+
     const ctx = canvas.getContext("2d");
     const dpr = window.devicePixelRatio || 1;
     const rect = canvas.getBoundingClientRect();
@@ -201,7 +231,7 @@
     const positions = {};
     const velocities = {};
     graph.nodes.forEach((node, i) => {
-      const cached = vizState.layout[node.id];
+      const cached = layoutStore[node.id];
       if (cached && Number.isFinite(cached.x) && Number.isFinite(cached.y)) {
         positions[node.id] = { x: cached.x, y: cached.y };
       } else {
@@ -217,8 +247,8 @@
     });
 
     const currentTopology = topologyKey(graph);
-    const topologyUnchanged = vizState.lastTopologyKey === currentTopology;
-    const allNodesCached = graph.nodes.every((node) => vizState.layout[node.id]);
+    const topologyUnchanged = !isolated && vizState.lastTopologyKey === currentTopology;
+    const allNodesCached = graph.nodes.every((node) => layoutStore[node.id]);
     const iterations = (topologyUnchanged && allNodesCached) ? 0 : 50;
 
     // Lightweight force simulation for more natural clustering than a fixed circle.
@@ -262,8 +292,8 @@
       });
 
       graph.nodes.forEach((node) => {
-        if (vizState.pinned[node.id]) {
-          const pin = vizState.pinned[node.id];
+        if (pinnedStore[node.id]) {
+          const pin = pinnedStore[node.id];
           positions[node.id].x = pin.x;
           positions[node.id].y = pin.y;
           velocities[node.id].x = 0;
@@ -281,19 +311,21 @@
       });
     }
 
-    graph.nodes.forEach((node) => {
-      vizState.layout[node.id] = { x: positions[node.id].x, y: positions[node.id].y };
-    });
-    vizState.lastGraph = graph;
-    vizState.lastCanvas = canvas;
-    vizState.lastTopologyKey = currentTopology;
+    if (!isolated) {
+      graph.nodes.forEach((node) => {
+        vizState.layout[node.id] = { x: positions[node.id].x, y: positions[node.id].y };
+      });
+      vizState.lastGraph = graph;
+      vizState.lastCanvas = canvas;
+      vizState.lastTopologyKey = currentTopology;
+    }
 
     // Apply camera transform: screen = (world - camera) * zoom, composed with DPR.
     ctx.save();
-    ctx.translate(-vizState.camera.x * vizState.camera.zoom, -vizState.camera.y * vizState.camera.zoom);
-    ctx.scale(vizState.camera.zoom, vizState.camera.zoom);
+    ctx.translate(-cameraStore.x * cameraStore.zoom, -cameraStore.y * cameraStore.zoom);
+    ctx.scale(cameraStore.zoom, cameraStore.zoom);
 
-    const hl = vizState.highlight;
+    const hl = highlightStore;
     const classFor = (id) => {
       if (!hl) return "neutral";
       if (hl.primary.indexOf(id) >= 0) return "primary";
@@ -302,11 +334,11 @@
       return "faded";
     };
     const edgeAlpha = (fromCls, toCls) => {
-      if (!hl) return 0.25;
+      if (!hl) return 0.4;
       const min = fromCls === "faded" || toCls === "faded" ? "faded" : (fromCls === "twoHop" || toCls === "twoHop" ? "twoHop" : "lit");
-      if (min === "lit") return 0.55;
-      if (min === "twoHop") return 0.22;
-      return 0.07;
+      if (min === "lit") return 0.7;
+      if (min === "twoHop") return 0.3;
+      return 0.1;
     };
     const nodeAlpha = (cls) => {
       if (!hl) return 1;
@@ -315,12 +347,11 @@
       return 0.15;
     };
 
-    const pathSet = new Set(vizState.path || []);
     const pathEdges = new Set();
-    if (vizState.path && vizState.path.length > 1) {
-      for (let i = 0; i < vizState.path.length - 1; i += 1) {
-        const a = vizState.path[i];
-        const b = vizState.path[i + 1];
+    if (pathStore && pathStore.length > 1) {
+      for (let i = 0; i < pathStore.length - 1; i += 1) {
+        const a = pathStore[i];
+        const b = pathStore[i + 1];
         pathEdges.add(a + ">" + b);
         pathEdges.add(b + ">" + a);
       }
@@ -337,9 +368,9 @@
         // Defer path-edge render so it draws on top.
         return;
       }
-      const effectiveAlpha = vizState.path ? 0.15 : edgeAlpha(classFor(edge.from), classFor(edge.to));
+      const effectiveAlpha = pathStore ? 0.15 : edgeAlpha(classFor(edge.from), classFor(edge.to));
       ctx.globalAlpha = effectiveAlpha;
-      ctx.strokeStyle = "rgba(130,160,190,1)";
+      ctx.strokeStyle = PALETTE.edge;
       ctx.lineWidth = 0.8 + edge.weight * 0.1;
       ctx.beginPath();
       ctx.moveTo(a.x, a.y);
@@ -348,16 +379,16 @@
     });
     ctx.globalAlpha = 1;
 
-    if (vizState.path && vizState.path.length > 1) {
+    if (pathStore && pathStore.length > 1) {
       const dashPhase = -((typeof performance !== "undefined" && performance.now ? performance.now() : Date.now()) / 40) % 16;
       ctx.save();
-      ctx.strokeStyle = "#67a3ff";
+      ctx.strokeStyle = PALETTE.pathEdge;
       ctx.lineWidth = 2.4;
       ctx.setLineDash([8, 6]);
       ctx.lineDashOffset = dashPhase;
-      for (let i = 0; i < vizState.path.length - 1; i += 1) {
-        const a = positions[vizState.path[i]];
-        const b = positions[vizState.path[i + 1]];
+      for (let i = 0; i < pathStore.length - 1; i += 1) {
+        const a = positions[pathStore[i]];
+        const b = positions[pathStore[i + 1]];
         if (!a || !b) continue;
         ctx.beginPath();
         ctx.moveTo(a.x, a.y);
@@ -367,22 +398,22 @@
       ctx.restore();
     }
 
-    const sanctioned = new Set(vizState.overlay.sanctionedIds);
-    const mixers = new Set(vizState.overlay.mixers);
+    const sanctioned = new Set(overlayStore.sanctionedIds);
+    const mixers = new Set(overlayStore.mixers);
     const chainMembers = new Set();
-    vizState.overlay.shellChains.forEach((chain) => chain.forEach((id) => chainMembers.add(id)));
+    overlayStore.shellChains.forEach((chain) => chain.forEach((id) => chainMembers.add(id)));
     const pulsePhase = (typeof performance !== "undefined" && performance.now ? performance.now() : Date.now()) / 900;
 
     graph.nodes.forEach((node) => {
       const p = positions[node.id];
       const risk = riskByEntity[node.id] || 50;
-      const color = risk >= 85 ? "#ef4444" : risk >= 65 ? "#f59e0b" : "#22c55e";
+      const color = riskColor(risk);
       const cls = classFor(node.id);
       ctx.globalAlpha = nodeAlpha(cls);
 
       // Halo for sanctioned entities (drawn first, behind shape)
       if (sanctioned.has(node.id)) {
-        ctx.strokeStyle = "rgba(239,68,68,0.65)";
+        ctx.strokeStyle = PALETTE.sanctionedHalo;
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.arc(p.x, p.y, 10, 0, Math.PI * 2);
@@ -392,7 +423,7 @@
       // Pulse for mixer nodes
       if (mixers.has(node.id)) {
         const pulse = 0.5 + 0.5 * Math.sin(pulsePhase);
-        ctx.strokeStyle = "rgba(59,130,246," + (0.25 + pulse * 0.45).toFixed(3) + ")";
+        ctx.strokeStyle = "rgba(234, 184, 115, " + (0.28 + pulse * 0.5).toFixed(3) + ")";
         ctx.lineWidth = 1.5;
         ctx.beginPath();
         ctx.arc(p.x, p.y, 9 + pulse * 4, 0, Math.PI * 2);
@@ -401,7 +432,7 @@
 
       // Chain member highlight stroke
       if (chainMembers.has(node.id)) {
-        ctx.strokeStyle = "#f59e0b";
+        ctx.strokeStyle = PALETTE.chainStroke;
         ctx.lineWidth = 1.5;
         ctx.beginPath();
         ctx.arc(p.x, p.y, 8, 0, Math.PI * 2);
@@ -435,8 +466,8 @@
       { x: rect.width * 0.42, y: rect.height * 0.74, id: entities[3] }
     ];
 
-    ctx.strokeStyle = "rgba(107,149,204,0.4)";
-    ctx.lineWidth = 1.4;
+    ctx.strokeStyle = "rgba(200, 180, 150, 0.55)";
+    ctx.lineWidth = 1.2;
     for (let i = 0; i < points.length; i += 1) {
       for (let j = i + 1; j < points.length; j += 1) {
         ctx.beginPath();
@@ -446,13 +477,13 @@
       }
     }
     points.forEach((p) => {
-      ctx.fillStyle = "#3b82f6";
+      ctx.fillStyle = PALETTE.accent;
       ctx.beginPath();
-      ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
+      ctx.arc(p.x, p.y, 5.5, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = "#d7e3f0";
-      ctx.font = "11px system-ui";
-      ctx.fillText(p.id, p.x + 9, p.y + 4);
+      ctx.fillStyle = "#c6bcaa";
+      ctx.font = "11px 'IBM Plex Mono', ui-monospace, monospace";
+      ctx.fillText(p.id, p.x + 10, p.y + 4);
     });
   }
 
@@ -479,7 +510,8 @@
         const value = row.cells[t];
         const intensity = value / max;
         const c = cell(String(value), "heatmap-cell");
-        c.style.background = "rgba(59,130,246," + (0.1 + intensity * 0.55) + ")";
+        c.style.background = "rgba(234, 184, 115, " + (0.08 + intensity * 0.6).toFixed(3) + ")";
+        c.style.color = intensity > 0.6 ? "#1a1209" : "#e9d9bc";
         c.title = row.jurisdiction + " | " + t + ": " + value;
         r.appendChild(c);
       });
@@ -510,25 +542,23 @@
     const cy = rect.height - 8;
     const r = Math.min(rect.width / 2 - 8, rect.height - 10);
     ctx.lineWidth = 10;
-    ctx.strokeStyle = "#2a3b53";
+    ctx.strokeStyle = "#1f2a38";
     ctx.beginPath();
     ctx.arc(cx, cy, r, Math.PI, 2 * Math.PI);
     ctx.stroke();
 
     const ratio = Math.max(0, Math.min(1, value / 100));
-    ctx.strokeStyle = value >= 85 ? "#ef4444" : value >= 65 ? "#f59e0b" : "#22c55e";
+    ctx.strokeStyle = riskColor(value);
     ctx.beginPath();
     ctx.arc(cx, cy, r, Math.PI, Math.PI + Math.PI * ratio);
     ctx.stroke();
 
-    ctx.fillStyle = "#e8edf2";
-    ctx.font = "bold 14px system-ui";
     ctx.textAlign = "center";
-    ctx.fillStyle = "#93a7be";
-    ctx.font = "10px system-ui";
-    ctx.fillText("RISK SCORE", cx, cy - 28);
-    ctx.fillStyle = "#e8edf2";
-    ctx.font = "bold 14px system-ui";
+    ctx.fillStyle = "#8a9aaa";
+    ctx.font = "0.62rem 'IBM Plex Mono', ui-monospace, monospace";
+    ctx.fillText("RISK  ·  SCORE", cx, cy - 28);
+    ctx.fillStyle = "#f3ede3";
+    ctx.font = "600 16px 'IBM Plex Mono', ui-monospace, monospace";
     ctx.fillText(String(Math.round(value)), cx, cy - 10);
   }
 
@@ -549,8 +579,8 @@
     const span = Math.max(1, max - min);
     const step = rect.width / (values.length - 1);
 
-    ctx.strokeStyle = "#67a3ff";
-    ctx.lineWidth = 1.8;
+    ctx.strokeStyle = PALETTE.accent;
+    ctx.lineWidth = 1.6;
     ctx.beginPath();
     values.forEach((v, i) => {
       const x = i * step;
@@ -580,12 +610,12 @@
     const w = rect.width - pad.l - pad.r;
     const h = rect.height - pad.t - pad.b;
 
-    ctx.strokeStyle = "rgba(140,166,193,0.3)";
+    ctx.strokeStyle = "rgba(170, 155, 130, 0.28)";
     ctx.strokeRect(pad.l, pad.t, w, h);
 
     const xThreshold = pad.l + (policy.highRiskThreshold / 100) * w;
     const yThreshold = pad.t + h - (policy.confidenceThreshold / 100) * h;
-    ctx.strokeStyle = "rgba(59,130,246,0.7)";
+    ctx.strokeStyle = "rgba(234, 184, 115, 0.7)";
     ctx.setLineDash([4, 4]);
     ctx.beginPath();
     ctx.moveTo(xThreshold, pad.t);
@@ -600,14 +630,14 @@
     cases.forEach((c) => {
       const x = pad.l + (c.riskScore / 100) * w;
       const y = pad.t + h - (c.confidence / 100) * h;
-      ctx.fillStyle = c.riskScore >= 85 ? "#ef4444" : c.riskScore >= 65 ? "#f59e0b" : "#22c55e";
+      ctx.fillStyle = riskColor(c.riskScore);
       ctx.beginPath();
       ctx.arc(x, y, 4, 0, Math.PI * 2);
       ctx.fill();
     });
 
-    ctx.fillStyle = "#90a5bc";
-    ctx.font = "10px system-ui";
+    ctx.fillStyle = "#8a9aaa";
+    ctx.font = "10px 'IBM Plex Mono', ui-monospace, monospace";
     ctx.fillText("Monitoring", pad.l + 4, pad.t + h - 6);
     ctx.fillText("Analyst Review", xThreshold + 6, pad.t + h - 6);
     ctx.fillText("Intelligence", xThreshold + 6, yThreshold - 8);

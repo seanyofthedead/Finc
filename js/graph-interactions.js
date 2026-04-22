@@ -43,6 +43,8 @@
         pointerDownAt = { x: evt.clientX, y: evt.clientY };
         movedFarEnough = false;
         shiftAtPointerDown = Boolean(evt.shiftKey);
+        canvas.classList.add("is-dragging-node");
+        canvas.classList.remove("is-hover-node");
         const world = window.FinCENViz.screenToWorld(x, y);
         window.FinCENViz.pinNode(nodeId, world.x, world.y);
         if (canvas.setPointerCapture && evt.pointerId != null) {
@@ -56,6 +58,7 @@
       activePointerId = evt.pointerId;
       panStart = { x: evt.clientX, y: evt.clientY };
       cameraAtPanStart = window.FinCENViz.getCamera();
+      canvas.classList.add("is-panning");
     }
 
     function onPointerMove(evt) {
@@ -86,12 +89,14 @@
       if (evt.target !== canvas) return;
       const { x, y } = localPoint(evt);
       const nodeId = window.FinCENViz.hitTestNode(x, y);
+      canvas.classList.toggle("is-hover-node", Boolean(nodeId));
       const hl = nodeId ? window.FinCENViz.computeHighlight(getGraph(), nodeId) : null;
       window.FinCENViz.setHighlight(hl);
       redraw();
     }
 
     function onPointerLeave() {
+      canvas.classList.remove("is-hover-node");
       if (draggingId) return;
       window.FinCENViz.setHighlight(null);
       redraw();
@@ -104,6 +109,7 @@
         panStart = null;
         cameraAtPanStart = null;
         activePointerId = null;
+        canvas.classList.remove("is-panning");
         return;
       }
       if (!draggingId) return;
@@ -111,22 +117,35 @@
       const id = draggingId;
       const wasClick = !movedFarEnough;
       const wasShift = shiftAtPointerDown;
-      window.FinCENViz.unpinNode(id);
       draggingId = null;
       activePointerId = null;
       pointerDownAt = null;
       movedFarEnough = false;
       shiftAtPointerDown = false;
+      canvas.classList.remove("is-dragging-node");
       if (wasClick) {
+        window.FinCENViz.unpinNode(id);
         if (wasShift && onShiftClick) {
           onShiftClick(id);
         } else {
           onClick(id);
         }
+        redraw();
       } else {
-        onDragEnd(id);
+        // Drag release — settle the node with a tiny spring so physics unsticks gently.
+        const motion = window.FinCENMotion;
+        if (motion && !motion.reducedMotion()) {
+          window.setTimeout(() => {
+            window.FinCENViz.unpinNode(id);
+            redraw();
+            onDragEnd(id);
+          }, 140);
+        } else {
+          window.FinCENViz.unpinNode(id);
+          onDragEnd(id);
+          redraw();
+        }
       }
-      redraw();
     }
 
     function onWheel(evt) {

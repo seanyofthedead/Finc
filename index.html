@@ -4,53 +4,81 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>FinCEN Signal-to-Decision Enterprise Analytics Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,300..900,0..100&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="css/styles.css" />
   </head>
   <body>
-    <div class="app-shell">
+    <div class="app-header">
+      <div class="classification-strip" aria-hidden="true">
+        <span>UNCLASSIFIED // FOR DEMONSTRATION</span>
+        <span>FINCEN — ENTERPRISE ANALYTICS PLATFORM</span>
+        <span>UNCLASSIFIED // FOR DEMONSTRATION</span>
+      </div>
       <header class="topbar">
         <div class="title-group">
-          <h1>FinCEN Signal-to-Decision Enterprise Analytics Platform</h1>
-          <p class="subtitle">Ingestion → Detection → Routing → Analyst Decision → Governed Audit</p>
+          <p class="eyebrow"><span class="eyebrow-num">File 01 ·</span> Signal-to-Decision Platform</p>
+          <h1 class="display-title"><span>Signal</span><span class="arrow" aria-hidden="true">→</span><span>Decision</span></h1>
+          <p class="subtitle"><em>Ingestion</em>  /  <em>Detection</em>  /  <em>Routing</em>  /  <em>Analyst Decision</em>  /  <em>Governed Audit</em></p>
         </div>
         <div class="topbar-actions">
-          <span class="badge" id="model-version-badge">Model v3.2.4</span>
-          <button class="btn accent" id="launch-guide-btn">Guide Demo</button>
+          <div class="status-chip" aria-live="polite">
+            <span class="status-dot"></span>
+            <span class="status-label">LIVE</span>
+            <span class="status-sep">·</span>
+            <span id="status-clock" class="mono">— UTC</span>
+          </div>
+          <span class="badge mono" id="model-version-badge">MODEL v3.2.4</span>
+          <button class="btn accent" id="launch-guide-btn"><span class="btn-icon" data-icon="sparkle" data-icon-size="14"></span><span>Guide Demo</span></button>
+          <button class="btn cmdk-trigger" id="cmdk-trigger" type="button" aria-label="Open command palette"><span class="btn-icon" data-icon="search" data-icon-size="14"></span><span class="cmdk-label">Search</span><kbd class="cmdk-kbd">⌘K</kbd></button>
         </div>
       </header>
+      </div>
 
       <nav class="tab-nav" id="tab-nav">
-        <button class="tab-btn active" data-screen="screen-pipeline">Data Pipeline</button>
-        <button class="tab-btn" data-screen="screen-signals">Signal Engineering</button>
-        <button class="tab-btn" data-screen="screen-analytics">Analytics &amp; Detection</button>
-        <button class="tab-btn" data-screen="screen-triage">Risk Scoring &amp; Triage</button>
-        <button class="tab-btn" data-screen="screen-workspace">Analyst Workspace</button>
-        <button class="tab-btn" data-screen="screen-enterprise">Enterprise Deployment &amp; Modular Expansion</button>
+        <button class="tab-btn active" data-screen="screen-pipeline"><span class="tab-icon" data-icon="pipeline"></span><span>Data Pipeline</span></button>
+        <button class="tab-btn" data-screen="screen-signals"><span class="tab-icon" data-icon="signals"></span><span>Signal Engineering</span></button>
+        <button class="tab-btn" data-screen="screen-analytics"><span class="tab-icon" data-icon="analytics"></span><span>Analytics &amp; Detection</span></button>
+        <button class="tab-btn" data-screen="screen-triage"><span class="tab-icon" data-icon="triage"></span><span>Risk Scoring &amp; Triage</span></button>
+        <button class="tab-btn" data-screen="screen-workspace"><span class="tab-icon" data-icon="workspace"></span><span>Analyst Workspace</span></button>
+        <button class="tab-btn" data-screen="screen-enterprise"><span class="tab-icon" data-icon="enterprise"></span><span>Enterprise Deployment</span></button>
       </nav>
 
       <div class="kpi-strip">
-        <div class="kpi-item"><span class="kpi-value" id="kpi-total-cases">0</span><span class="kpi-label">Total Cases</span></div>
-        <div class="kpi-item"><span class="kpi-value" id="kpi-enforcement">0</span><span class="kpi-label">Enforcement Referrals</span></div>
-        <div class="kpi-item"><span class="kpi-value" id="kpi-intelligence">0</span><span class="kpi-label">Intelligence Queue</span></div>
-        <div class="kpi-item"><span class="kpi-value" id="kpi-average-risk">0</span><span class="kpi-label">Average Risk</span></div>
-        <div class="kpi-item"><span class="kpi-value" id="kpi-bias">Green</span><span class="kpi-label">Bias Status</span></div>
+        <div class="kpi-item"><span class="kpi-value" id="kpi-total-cases">&mdash;</span><span class="kpi-label">Total Cases</span></div>
+        <div class="kpi-item"><span class="kpi-value" id="kpi-enforcement">&mdash;</span><span class="kpi-label">Enforcement Referrals</span></div>
+        <div class="kpi-item"><span class="kpi-value" id="kpi-intelligence">&mdash;</span><span class="kpi-label">Intelligence Queue</span></div>
+        <div class="kpi-item"><span class="kpi-value" id="kpi-average-risk">&mdash;</span><span class="kpi-label">Average Risk</span></div>
+        <div class="kpi-item"><span class="kpi-value" id="kpi-bias">&mdash;</span><span class="kpi-label">Bias Status</span></div>
       </div>
 
       <main>
         <section class="screen active" id="screen-pipeline">
-          <p class="screen-header">Six heterogeneous datasets are ingested and fused into a unified intelligence graph with lineage and freshness controls.</p>
-          <div class="layout-grid">
-            <div class="card">
-              <h3>Ingestion Sources</h3>
+          <header class="section-masthead">
+            <p class="kicker mono"><span class="kicker-num">01</span> <span class="kicker-rule"></span> Pipeline</p>
+            <h2 class="display-head">Ingestion, fused into an intelligence graph.</h2>
+            <p class="section-lede">Six heterogeneous datasets — CTRs, SARs, sanctions, crypto ledgers, bank metadata, cross-border wires — normalized, resolved to canonical entities, and published to a governed graph with lineage and freshness controls.</p>
+          </header>
+
+          <div class="layout-grid pipeline-grid">
+            <div class="card card-primary is-raised">
+              <header class="card-head">
+                <p class="kicker mono"><span class="kicker-num">1.1</span> Ingestion Sources</p>
+                <p class="card-dek">Six feeds · batch &amp; streaming</p>
+              </header>
               <div class="source-grid" id="source-grid"></div>
             </div>
 
             <div class="layout-grid cols-2">
               <div class="card">
-                <h3>Batch + Stream Ingestion</h3>
+                <header class="card-head">
+                  <p class="kicker mono"><span class="kicker-num">1.2</span> Batch + Stream</p>
+                  <p class="card-dek">Continuous load with live event tail</p>
+                </header>
                 <div class="metric-row">
-                  <span class="muted">Batch ingestion progress</span>
-                  <span id="batch-progress-label">0%</span>
+                  <span class="micro-label">Batch progress</span>
+                  <span id="batch-progress-label" class="mono">0%</span>
                 </div>
                 <div class="progress-wrap"><div class="progress-bar" id="batch-progress-bar"></div></div>
                 <div class="spacer-md"></div>
@@ -59,38 +87,68 @@
                   <label for="stream-toggle" style="margin: 0">Real-time feed active</label>
                 </div>
                 <div class="metric-row">
-                  <span class="muted">Streaming events received</span>
-                  <span id="stream-count">0</span>
+                  <span class="micro-label">Streaming events</span>
+                  <span id="stream-count" class="mono">0</span>
                 </div>
                 <div class="metric-row">
-                  <span class="muted">Data freshness</span>
-                  <span id="freshness-indicator">-</span>
+                  <span class="micro-label">Data freshness</span>
+                  <span id="freshness-indicator" class="mono">—</span>
                 </div>
               </div>
               <div class="card" id="entity-resolution-card">
-                <h3>Entity Resolution &amp; Fusion</h3>
-                <div class="metric-row"><span class="muted">Before merge</span><span id="before-merge-count">-</span></div>
-                <div class="metric-row"><span class="muted">After merge</span><span id="after-merge-count">-</span></div>
-                <div id="merge-list"></div>
+                <header class="card-head">
+                  <p class="kicker mono"><span class="kicker-num">1.3</span> Entity Resolution &amp; Fusion</p>
+                  <p class="card-dek">Alias collapse · canonical IDs</p>
+                </header>
+                <div class="merge-arrow-row">
+                  <div class="merge-stat">
+                    <div class="micro-label">Before</div>
+                    <div id="before-merge-count" class="big-stat mono">—</div>
+                  </div>
+                  <div class="merge-arrow" aria-hidden="true">→</div>
+                  <div class="merge-stat">
+                    <div class="micro-label">After</div>
+                    <div id="after-merge-count" class="big-stat mono">—</div>
+                  </div>
+                </div>
+                <div id="merge-list" class="merge-list"></div>
               </div>
             </div>
 
             <div class="layout-grid cols-2">
-              <div class="card">
-                <h3>Relationship Graph Preview</h3>
-                <canvas class="mini-canvas" id="pipeline-graph-canvas"></canvas>
+              <div class="card is-raised pipeline-preview-card">
+                <header class="card-head">
+                  <p class="kicker mono"><span class="kicker-num">1.4</span> Relationship Graph Preview</p>
+                  <p class="card-dek">Canonical subgraph — top-connectivity 36</p>
+                </header>
+                <div class="pipeline-preview-wrap">
+                  <canvas class="mini-canvas pipeline-preview-canvas" id="pipeline-graph-canvas"></canvas>
+                  <button class="pipeline-preview-cta" data-screen-link="screen-analytics" type="button">
+                    <span>Open full network</span>
+                    <span class="pipeline-preview-cta-arrow" aria-hidden="true">→</span>
+                  </button>
+                </div>
               </div>
               <div class="card">
-                <h3>Source Lineage</h3>
-                <p class="muted">Hover source cards for lineage details (source, timestamp, transformation).</p>
-                <div id="lineage-panel" class="muted">Select or hover a source card to inspect lineage.</div>
+                <header class="card-head">
+                  <p class="kicker mono"><span class="kicker-num">1.5</span> Source Lineage</p>
+                  <p class="card-dek">Hover a source to inspect provenance</p>
+                </header>
+                <div id="lineage-panel" class="lineage-panel">
+                  <p class="lineage-placeholder">Awaiting inspection —</p>
+                  <p class="lineage-hint mono">select or hover any source to trace its path from raw ingest → normalized → graph.</p>
+                </div>
               </div>
             </div>
           </div>
         </section>
 
         <section class="screen" id="screen-signals">
-          <p class="screen-header">Raw financial events are transformed into reusable, explainable risk features for case-level prioritization.</p>
+          <header class="section-masthead">
+            <p class="kicker mono"><span class="kicker-num">02</span> <span class="kicker-rule"></span> Signal Engineering</p>
+            <h2 class="display-head">Raw events, distilled into explainable features.</h2>
+            <p class="section-lede">Transaction velocity, jurisdictional exposure, beneficial-ownership depth, peer-group deviation, cross-border flagging — every case carries an audit-quality feature record back to its raw evidence.</p>
+          </header>
           <div class="layout-grid cols-2">
             <div class="card">
               <h3>Derived Signal Table</h3>
@@ -122,9 +180,13 @@
         </section>
 
         <section class="screen" id="screen-analytics">
-          <p class="screen-header">Network and anomaly analytics distill complex activity into defensible case signals with transparent rationale.</p>
+          <header class="section-masthead">
+            <p class="kicker mono"><span class="kicker-num">03</span> <span class="kicker-rule"></span> Analytics &amp; Detection</p>
+            <h2 class="display-head">Network anomalies, made legible.</h2>
+            <p class="section-lede">The intelligence graph compresses heterogeneous activity into patterns an analyst can read in seconds — shell-company chains, crypto-mixing structures, disposable-wallet clusters — each with transparent rationale.</p>
+          </header>
           <div class="layout-grid cols-2">
-            <div class="card">
+            <div class="card is-raised">
               <h3>Entity Relationship Network</h3>
               <canvas class="graph-canvas" id="analytics-graph-canvas"></canvas>
               <div id="analytics-legend-host"></div>
@@ -147,7 +209,11 @@
         </section>
 
         <section class="screen" id="screen-triage">
-          <p class="screen-header">Deterministic policy thresholds govern automated routing to intelligence, enforcement, analyst review, or monitoring.</p>
+          <header class="section-masthead">
+            <p class="kicker mono"><span class="kicker-num">04</span> <span class="kicker-rule"></span> Risk Scoring &amp; Triage</p>
+            <h2 class="display-head">Policy thresholds govern every route.</h2>
+            <p class="section-lede">Deterministic rules route each case toward enforcement, intelligence, human review, or monitored closure. Thresholds are adjustable in real time; the rationale is recorded with every case that moves.</p>
+          </header>
           <div class="card">
             <h3>Policy Threshold Controls</h3>
             <div class="control-row">
@@ -180,7 +246,11 @@
         </section>
 
         <section class="screen" id="screen-workspace">
-          <p class="screen-header">Analysts review model evidence, apply controlled overrides, and generate auditable decision records.</p>
+          <header class="section-masthead">
+            <p class="kicker mono"><span class="kicker-num">05</span> <span class="kicker-rule"></span> Analyst Workspace</p>
+            <h2 class="display-head">Evidence in, decision out, audit always on.</h2>
+            <p class="section-lede">Entity profile, model explanation, transaction evidence, governed override — the analyst surface where a human judgment becomes a defensible, timestamped record.</p>
+          </header>
           <div class="workspace-layout">
             <div class="card">
               <h3>Analyst Review Workspace</h3>
@@ -239,7 +309,11 @@
         </section>
 
         <section class="screen" id="screen-enterprise">
-          <p class="screen-header">A centralized enterprise backbone supports modular mission extensions without duplicating core platform services.</p>
+          <header class="section-masthead">
+            <p class="kicker mono"><span class="kicker-num">06</span> <span class="kicker-rule"></span> Enterprise Deployment</p>
+            <h2 class="display-head">One backbone. Many missions.</h2>
+            <p class="section-lede">Ingestion, feature engineering, analytics, scoring, governance, lifecycle — shared infrastructure that every mission module inherits. Plug in a typology pack; keep the platform.</p>
+          </header>
           <div class="card">
             <h3>Enterprise Deployment &amp; Modular Expansion</h3>
             <p class="muted">Select a mission module to see which enterprise capabilities it leverages.</p>
@@ -272,6 +346,12 @@
     <script src="js/visualizations.js"></script>
     <script src="js/pattern-detection.js"></script>
     <script src="js/path-tracing.js"></script>
+    <script src="js/motion.js"></script>
+    <script src="js/preferences.js"></script>
+    <script src="js/preferences-ui.js"></script>
+    <script src="js/icons.js"></script>
+    <script src="js/command-palette.js"></script>
+    <script src="js/graph-a11y.js"></script>
     <script src="js/entity-panel.js"></script>
     <script src="js/legend.js"></script>
     <script src="js/graph-interactions.js"></script>

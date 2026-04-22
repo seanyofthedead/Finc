@@ -84,8 +84,7 @@
     selectedWorkspaceCase: null,
     selectedModule: null,
     guideIndex: -1,
-    pendingAction: null,
-    activePulseIndex: 0
+    pendingAction: null
   };
 
   const typologyList = ["All", "Structuring", "TBML", "Sanctions Evasion", "Crypto Layering", "Unusual Velocity"];
@@ -131,6 +130,17 @@
     }
   }
 
+  function emptyState(opts) {
+    const iconName = opts.icon || "search";
+    const iconHtml = window.FinCENIcons ? window.FinCENIcons.render(iconName, { size: 22 }) : "";
+    return '<div class="empty-state">' +
+      '<span class="empty-state-icon">' + iconHtml + "</span>" +
+      '<p class="empty-state-title">' + (opts.title || "Nothing here yet") + "</p>" +
+      (opts.body ? '<p class="empty-state-body">' + opts.body + "</p>" : "") +
+      (opts.hint ? '<p class="empty-state-hint">' + opts.hint + "</p>" : "") +
+      "</div>";
+  }
+
   function formatTimestamp(isoString) {
     const d = new Date(isoString);
     const p = (n) => String(n).padStart(2, "0");
@@ -147,23 +157,37 @@
     return "risk-low";
   }
 
+  const SOURCE_ICON_BY_ID = {
+    SRC_SAR: "flag",
+    SRC_CTR: "database",
+    SRC_SAN: "shield",
+    SRC_CRYPTO: "bitcoin",
+    SRC_BANK: "building",
+    SRC_XBORDER: "globe"
+  };
+
   function renderPipeline() {
     ui.sourceGrid.innerHTML = "";
-    data.ingestionSources.forEach((src) => {
+    data.ingestionSources.forEach((src, index) => {
       const card = document.createElement("div");
-      card.className = "card source-card";
+      const isStreaming = src.mode === "Streaming";
+      card.className = "card source-card" + (isStreaming ? " is-streaming" : "");
+      card.style.setProperty("--stagger-i", String(index));
+      const iconName = SOURCE_ICON_BY_ID[src.id] || "database";
       card.innerHTML =
         '<span class="source-mode">' + src.mode + "</span>" +
-        "<h4><span class='pulse'></span>" + src.label + "</h4>" +
-        '<div class="metric-row"><span class="muted">Records</span><span>' + src.records.toLocaleString() + "</span></div>" +
-        '<div class="metric-row"><span class="muted">Freshness</span><span>' + src.freshnessMinutes + " min</span></div>";
+        '<div class="source-card-head">' +
+          '<span class="source-icon" data-icon="' + iconName + '" data-icon-size="18"></span>' +
+          "<h4>" + src.label + "</h4>" +
+        "</div>" +
+        '<div class="metric-row"><span class="muted">Records</span><span class="mono">' + src.records.toLocaleString() + "</span></div>" +
+        '<div class="metric-row"><span class="muted">Freshness</span><span class="mono">' + src.freshnessMinutes + " min</span></div>";
       card.addEventListener("mouseenter", () => {
-        ui.lineagePanel.textContent =
-          src.label + " | " + formatTimestamp(new Date(Date.now() - src.freshnessMinutes * 60000).toISOString()) + " | " + src.lineage;
+        lineageTickerPaused = true;
+        renderLineageEntry(src);
       });
-      card.addEventListener("mousemove", () => {
-        ui.lineagePanel.textContent =
-          src.label + " | " + formatTimestamp(new Date(Date.now() - src.freshnessMinutes * 60000).toISOString()) + " | " + src.lineage;
+      card.addEventListener("mouseleave", () => {
+        lineageTickerPaused = false;
       });
       ui.sourceGrid.appendChild(card);
     });
@@ -180,7 +204,70 @@
       data.ingestionSources.map((s) => s.freshnessMinutes)
     ) + " min ago";
 
-    window.FinCENViz.drawMiniRelationship(ui.pipelineGraphCanvas, ["E02", "E12", "E18", "E16"]);
+    renderPipelinePreview();
+    if (window.FinCENIcons) window.FinCENIcons.hydrate(ui.sourceGrid);
+    startLineageTicker();
+  }
+
+  let lineageTickerId = null;
+  let lineageTickerIndex = 0;
+  let lineageTickerPaused = false;
+
+  function renderLineageEntry(src) {
+    if (!ui.lineagePanel || !src) return;
+    const ts = formatTimestamp(new Date(Date.now() - src.freshnessMinutes * 60000).toISOString());
+    ui.lineagePanel.innerHTML =
+      '<div class="lineage-live">' +
+        '<span class="lineage-live-dot"></span>' +
+        '<span class="mono lineage-live-label">LIVE TRACE</span>' +
+        '<span class="mono lineage-live-time">' + ts + '</span>' +
+      '</div>' +
+      '<div class="lineage-source">' + src.label + '</div>' +
+      '<div class="mono lineage-path">' + src.lineage + '</div>' +
+      '<div class="lineage-meta">' +
+        '<span class="mono">' + src.records.toLocaleString() + ' records</span>' +
+        '<span class="lineage-dot">·</span>' +
+        '<span class="mono">' + src.freshnessMinutes + ' min fresh</span>' +
+        '<span class="lineage-dot">·</span>' +
+        '<span class="mono">' + src.mode.toUpperCase() + '</span>' +
+      '</div>';
+  }
+
+  function startLineageTicker() {
+    if (lineageTickerId != null) return;
+    const sources = data.ingestionSources;
+    if (!sources || !sources.length) return;
+    renderLineageEntry(sources[0]);
+    lineageTickerId = setInterval(() => {
+      if (lineageTickerPaused) return;
+      lineageTickerIndex = (lineageTickerIndex + 1) % sources.length;
+      renderLineageEntry(sources[lineageTickerIndex]);
+    }, 3500);
+    if (ui.lineagePanel) {
+      ui.lineagePanel.addEventListener("mouseenter", () => { lineageTickerPaused = true; });
+      ui.lineagePanel.addEventListener("mouseleave", () => { lineageTickerPaused = false; });
+    }
+  }
+
+  function renderPipelinePreview() {
+    if (!ui.pipelineGraphCanvas) return;
+    const routing = engine.getRouting();
+    const riskByEntity = {};
+    routing.results.forEach((r) => { riskByEntity[r.entityId] = r.riskScore; });
+    const fullGraph = engine.getGraph();
+    // Trim to the most-connected 36 nodes for a legible hero preview.
+    const degree = {};
+    fullGraph.edges.forEach((e) => {
+      degree[e.from] = (degree[e.from] || 0) + 1;
+      degree[e.to] = (degree[e.to] || 0) + 1;
+    });
+    const ranked = fullGraph.nodes.slice().sort((a, b) => (degree[b.id] || 0) - (degree[a.id] || 0));
+    const keep = new Set(ranked.slice(0, 36).map((n) => n.id));
+    const previewGraph = {
+      nodes: fullGraph.nodes.filter((n) => keep.has(n.id)),
+      edges: fullGraph.edges.filter((e) => keep.has(e.from) && keep.has(e.to))
+    };
+    window.FinCENViz.drawGraph(ui.pipelineGraphCanvas, previewGraph, riskByEntity, { isolated: true });
   }
 
   function startIngestionSimulation() {
@@ -198,15 +285,6 @@
       }
     }, 900);
 
-    setInterval(() => {
-      const pulses = Array.from(document.querySelectorAll(".source-card .pulse"));
-      if (!pulses.length) {
-        return;
-      }
-      pulses.forEach((p) => p.classList.remove("streaming"));
-      appState.activePulseIndex = (appState.activePulseIndex + 1) % pulses.length;
-      pulses[appState.activePulseIndex].classList.add("streaming");
-    }, 1200);
   }
 
   function renderSignalEngineering() {
@@ -262,12 +340,19 @@
   let analyticsInteractionsAttached = false;
   let pulseRafId = null;
 
+  function reduceMotionActive() {
+    if (window.FinCENPrefs && window.FinCENPrefs.get("reduceMotion")) return true;
+    if (window.FinCENMotion && window.FinCENMotion.reducedMotion()) return true;
+    return false;
+  }
+
   function ensurePulseLoop() {
     if (pulseRafId != null) return;
+    if (reduceMotionActive()) return;
     const tick = () => {
       const onAnalytics = appState.activeScreen === "screen-analytics";
       const needsRedraw = analyticsGraphCache.overlay.mixers.length > 0 || analyticsGraphCache.hasPath;
-      if (onAnalytics && needsRedraw && ui.analyticsGraphCanvas) {
+      if (onAnalytics && needsRedraw && ui.analyticsGraphCanvas && !reduceMotionActive()) {
         window.FinCENViz.drawGraph(ui.analyticsGraphCanvas, analyticsGraphCache.graph, analyticsGraphCache.risk);
       }
       pulseRafId = window.requestAnimationFrame(tick);
@@ -301,6 +386,9 @@
     }
 
     window.FinCENViz.drawGraph(ui.analyticsGraphCanvas, graph, riskByEntity);
+    if (window.FinCENGraphA11y) {
+      window.FinCENGraphA11y.update(graph, analyticsGraphCache.overlay);
+    }
     ensurePulseLoop();
     window.FinCENViz.renderHeatmap(ui.heatmapContainer, engine.getHeatmap());
 
@@ -388,6 +476,16 @@
 
   function renderCaseCards(routingResults) {
     ui.caseCardsContainer.innerHTML = "";
+    if (!routingResults.length) {
+      ui.caseCardsContainer.innerHTML = emptyState({
+        icon: "search",
+        title: "No cases match the current filter.",
+        body: "Adjust the typology filter above or widen the policy thresholds on the Triage screen.",
+        hint: "Filter \u00b7 No results"
+      });
+      if (window.FinCENIcons) window.FinCENIcons.hydrate(ui.caseCardsContainer);
+      return;
+    }
     routingResults.forEach((c) => {
       const card = document.createElement("div");
       card.className = "case-card";
@@ -419,6 +517,12 @@
     });
 
     ui.routingBoard.innerHTML = "";
+    const QUEUE_EMPTY_COPY = {
+      "Intelligence Queue":     { title: "No cases pending intelligence review.", body: "High-risk, low-confidence cases arrive here." },
+      "Enforcement Referral":   { title: "No active enforcement referrals.", body: "High-risk, high-confidence cases escalate here." },
+      "Analyst Review":         { title: "No cases awaiting analyst review.", body: "Medium-risk cases land here for human judgment." },
+      "Monitoring / Auto-close":{ title: "No cases in passive monitoring.", body: "Low-risk cases auto-close here." }
+    };
     Object.keys(queues).forEach((q) => {
       const col = document.createElement("div");
       col.className = "routing-col";
@@ -426,20 +530,29 @@
       title.textContent = q + " (" + queues[q].length + ")";
       col.appendChild(title);
 
-      queues[q]
-        .sort((a, b) => b.riskScore - a.riskScore)
-        .forEach((c) => {
-          const item = document.createElement("div");
-          item.className = "route-card";
-          item.innerHTML =
-            "<strong>" + c.caseId + "</strong><br/>" +
-            "<span class='muted'>" + c.typology + "</span><br/>" +
-            "Risk " + c.riskScore + " | Confidence " + c.confidence +
-            (c.overridden ? "<br/><span class='pill risk-medium'>Overridden</span>" : "");
-          col.appendChild(item);
-        });
+      if (queues[q].length === 0) {
+        col.insertAdjacentHTML("beforeend", emptyState({
+          icon: "triage",
+          title: (QUEUE_EMPTY_COPY[q] || {}).title || "Queue empty.",
+          body: (QUEUE_EMPTY_COPY[q] || {}).body || ""
+        }));
+      } else {
+        queues[q]
+          .sort((a, b) => b.riskScore - a.riskScore)
+          .forEach((c) => {
+            const item = document.createElement("div");
+            item.className = "route-card";
+            item.innerHTML =
+              "<strong>" + c.caseId + "</strong><br/>" +
+              "<span class='muted'>" + c.typology + "</span><br/>" +
+              "Risk " + c.riskScore + " | Confidence " + c.confidence +
+              (c.overridden ? "<br/><span class='pill risk-medium'>Overridden</span>" : "");
+            col.appendChild(item);
+          });
+      }
       ui.routingBoard.appendChild(col);
     });
+    if (window.FinCENIcons) window.FinCENIcons.hydrate(ui.routingBoard);
 
     const policy = engine.getState().policy;
     ui.decisionPath.innerHTML =
@@ -471,11 +584,19 @@
     const enforcement = routing.queues["Enforcement Referral"].length;
     const intelligence = routing.queues["Intelligence Queue"].length;
     const avg = total ? (routing.results.reduce((sum, x) => sum + x.riskScore, 0) / total) : 0;
-    ui.kpiTotalCases.textContent = String(total);
-    ui.kpiEnforcement.textContent = String(enforcement);
-    ui.kpiIntelligence.textContent = String(intelligence);
-    ui.kpiAverageRisk.textContent = avg.toFixed(1);
-    ui.kpiBias.textContent = ui.biasIndicator ? ui.biasIndicator.textContent : "Green";
+    const anim = window.FinCENMotion && window.FinCENMotion.animateDigits;
+    const write = (el, val, opts) => {
+      if (anim) {
+        anim(el, val, opts || {});
+      } else {
+        el.textContent = typeof val === "number" ? (Number.isInteger(val) ? String(val) : val.toFixed(1)) : String(val);
+      }
+    };
+    write(ui.kpiTotalCases, total);
+    write(ui.kpiEnforcement, enforcement);
+    write(ui.kpiIntelligence, intelligence);
+    write(ui.kpiAverageRisk, avg, { format: (v) => v.toFixed(1) });
+    ui.kpiBias.textContent = ui.biasIndicator ? ui.biasIndicator.textContent : "—";
   }
 
   function bindPolicyControls() {
@@ -539,6 +660,15 @@
 
   function renderAudit() {
     const entries = engine.getState().auditLog;
+    if (!entries.length) {
+      ui.auditLog.innerHTML = emptyState({
+        icon: "workspace",
+        title: "No audit entries yet.",
+        body: "Every override, route action, and supervisory approval will appear here with timestamp and actor."
+      });
+      if (window.FinCENIcons) window.FinCENIcons.hydrate(ui.auditLog);
+      return;
+    }
     ui.auditLog.innerHTML = entries
       .map((a) => "<div class='audit-item'><div><strong>" + a.action + "</strong> - " + a.caseId + "</div><div class='muted'>" + formatTimestamp(a.timestamp) + " | " + a.actor + "</div><div>" + a.details + "</div></div>")
       .join("");
@@ -668,7 +798,7 @@
         const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
         path.setAttribute("d", "M 10 " + y1 + " C 95 " + y1 + ", 125 " + y2 + ", 210 " + y2);
         path.setAttribute("fill", "none");
-        path.setAttribute("stroke", active ? "#3b82f6" : "#4b5f79");
+        path.setAttribute("stroke", active ? "#eab873" : "#3b4a5c");
         path.setAttribute("stroke-width", active ? "2.2" : "1");
         path.setAttribute("opacity", active ? "0.9" : "0.5");
         ui.moduleConnectors.appendChild(path);
@@ -717,6 +847,11 @@
       }
       setScreen(btn.dataset.screen);
     });
+    document.addEventListener("click", (ev) => {
+      const link = ev.target.closest && ev.target.closest("[data-screen-link]");
+      if (!link) return;
+      setScreen(link.getAttribute("data-screen-link"));
+    });
   }
 
   function bindGlobalKeys() {
@@ -741,10 +876,202 @@
     });
   }
 
+  function bindScrollCompression() {
+    const topbar = document.querySelector(".topbar");
+    if (!topbar) return;
+    let compressed = false;
+    // Hysteresis: enter compressed mode at 44px, exit at 20px. The 24px
+    // dead zone stops the class from flickering on slow or wheel-inertia
+    // scrolling across a single threshold.
+    const onScroll = () => {
+      const y = window.scrollY || window.pageYOffset || 0;
+      let next = compressed;
+      if (!compressed && y > 44) next = true;
+      else if (compressed && y < 20) next = false;
+      if (next !== compressed) {
+        compressed = next;
+        topbar.classList.toggle("is-compressed", compressed);
+        document.body.classList.toggle("is-scrolled", compressed);
+      }
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+  }
+
+  function startStatusClock() {
+    const clockEl = document.getElementById("status-clock");
+    if (!clockEl) return;
+    const tick = () => {
+      const d = new Date();
+      const p = (n) => String(n).padStart(2, "0");
+      clockEl.textContent = p(d.getUTCHours()) + ":" + p(d.getUTCMinutes()) + ":" + p(d.getUTCSeconds()) + " UTC";
+    };
+    tick();
+    setInterval(tick, 1000);
+  }
+
+  function markHydrated() {
+    // Defer to the next frame so the skeleton has a chance to paint.
+    if (typeof window.requestAnimationFrame === "function") {
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => document.body.classList.add("hydrated"));
+      });
+    } else {
+      document.body.classList.add("hydrated");
+    }
+  }
+
+  function registerCommandPalette() {
+    if (!window.FinCENCommand) return;
+    const cmd = window.FinCENCommand;
+
+    const screens = [
+      { id: "screen-pipeline", title: "Go to Pipeline",          icon: "pipeline" },
+      { id: "screen-signals",   title: "Go to Signal Engineering", icon: "signals" },
+      { id: "screen-analytics", title: "Go to Analytics & Detection", icon: "analytics" },
+      { id: "screen-triage",    title: "Go to Risk Scoring & Triage", icon: "triage" },
+      { id: "screen-workspace", title: "Go to Analyst Workspace", icon: "workspace" },
+      { id: "screen-enterprise",title: "Go to Enterprise Deployment", icon: "enterprise" }
+    ];
+    screens.forEach((s) => {
+      cmd.registerCommand({
+        id: "nav." + s.id,
+        title: s.title,
+        keywords: "jump navigate screen section",
+        icon: s.icon,
+        hint: "",
+        action: () => setScreen(s.id)
+      });
+    });
+
+    typologyList.forEach((t) => {
+      cmd.registerCommand({
+        id: "filter.typology." + t.toLowerCase().replace(/\s+/g, "-"),
+        title: "Filter cases: " + t,
+        keywords: "typology pattern " + t,
+        icon: "triage",
+        action: () => {
+          engine.setTypologyFilter(t);
+          setScreen("screen-analytics");
+          renderAnalytics();
+          renderRouting();
+        }
+      });
+    });
+
+    cmd.registerCommand({
+      id: "action.guide",
+      title: "Open guide tour",
+      keywords: "demo walkthrough tutorial help",
+      icon: "sparkle",
+      action: () => {
+        ui.guideOverlay.classList.add("active");
+        showGuideStep(0);
+      }
+    });
+
+    cmd.registerCommand({
+      id: "action.reset-graph",
+      title: "Reset graph view (0)",
+      keywords: "zoom camera pan center",
+      icon: "analytics",
+      action: () => {
+        window.FinCENViz.setCamera(0, 0, 1);
+        if (ui.analyticsGraphCanvas) {
+          window.FinCENViz.drawGraph(ui.analyticsGraphCanvas, analyticsGraphCache.graph, analyticsGraphCache.risk);
+        }
+      }
+    });
+
+    cmd.registerCommand({
+      id: "action.clear-path",
+      title: "Clear traced fund-flow path",
+      keywords: "path trace reset",
+      icon: "analytics",
+      action: () => {
+        window.FinCENViz.setPathHighlight(null);
+        analyticsGraphCache.hasPath = false;
+        analyticsGraphCache.pathSource = null;
+        if (ui.analyticsGraphCanvas) {
+          window.FinCENViz.drawGraph(ui.analyticsGraphCanvas, analyticsGraphCache.graph, analyticsGraphCache.risk);
+        }
+      }
+    });
+
+    cmd.registerCommand({
+      id: "action.toggle-rich",
+      title: "Toggle rich demo data (reload with ?demo=rich)",
+      keywords: "synthetic fixture demo",
+      icon: "sparkle",
+      action: () => {
+        const url = new URL(window.location.href);
+        if (url.searchParams.get("demo") === "rich") {
+          url.searchParams.delete("demo");
+        } else {
+          url.searchParams.set("demo", "rich");
+        }
+        window.location.href = url.toString();
+      }
+    });
+
+    // Top-N flagged cases as jump-to-entity commands.
+    data.flaggedCases.slice(0, 30).forEach((fc) => {
+      const entity = data.entities.find((e) => e.id === fc.entityId);
+      if (!entity) return;
+      cmd.registerCommand({
+        id: "entity." + entity.id,
+        title: "Find entity: " + entity.name,
+        keywords: entity.kind + " " + entity.jurisdiction + " " + fc.typology + " " + entity.id,
+        hint: entity.jurisdiction,
+        icon: entity.kind === "shell_company" ? "shield" : entity.kind === "crypto_service" ? "bitcoin" : "building",
+        action: () => {
+          setScreen("screen-workspace");
+          if (ui.workspaceCaseSelect) {
+            ui.workspaceCaseSelect.value = fc.caseId;
+            appState.selectedWorkspaceCase = fc.caseId;
+            renderWorkspaceCase();
+          }
+        }
+      });
+    });
+  }
+
+  function bindCommandPaletteHotkey() {
+    document.addEventListener("keydown", (evt) => {
+      const mod = evt.metaKey || evt.ctrlKey;
+      if (mod && (evt.key === "k" || evt.key === "K")) {
+        evt.preventDefault();
+        if (window.FinCENCommand) {
+          window.FinCENCommand.isOpen() ? window.FinCENCommand.close() : window.FinCENCommand.open();
+        }
+      } else if (mod && evt.key === ",") {
+        evt.preventDefault();
+        if (window.FinCENPrefsUI) window.FinCENPrefsUI.toggle();
+      }
+    });
+    const trigger = document.getElementById("cmdk-trigger");
+    if (trigger) {
+      trigger.addEventListener("click", () => {
+        if (window.FinCENCommand) window.FinCENCommand.open();
+      });
+    }
+    if (window.FinCENCommand && window.FinCENPrefsUI) {
+      window.FinCENCommand.registerCommand({
+        id: "action.preferences",
+        title: "Open preferences",
+        keywords: "settings reduce motion density classification comfort",
+        icon: "sparkle",
+        hint: "\u2318 ,",
+        action: () => window.FinCENPrefsUI.open()
+      });
+    }
+  }
+
   function boot() {
     bindNavigation();
     bindPolicyControls();
     bindWorkspaceActions();
+    startStatusClock();
     bindGuide();
     bindGlobalKeys();
 
@@ -756,9 +1083,23 @@
     renderWorkspace();
     renderEnterpriseModules();
     renderKPIStrip();
+    registerCommandPalette();
+    bindCommandPaletteHotkey();
+    bindScrollCompression();
+    if (window.FinCENPrefs) {
+      window.FinCENPrefs.apply();
+      window.FinCENPrefs.subscribe(() => {
+        window.FinCENPrefs.apply();
+      });
+    }
+    if (window.FinCENGraphA11y && ui.analyticsGraphCanvas && ui.analyticsGraphCanvas.parentNode) {
+      window.FinCENGraphA11y.mount(ui.analyticsGraphCanvas.parentNode);
+    }
+    if (window.FinCENIcons) window.FinCENIcons.hydrate();
+    markHydrated();
 
     window.addEventListener("resize", () => {
-      window.FinCENViz.drawMiniRelationship(ui.pipelineGraphCanvas, ["E02", "E12", "E18", "E16"]);
+      renderPipelinePreview();
       renderAnalytics();
       drawModuleConnections();
     });

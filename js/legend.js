@@ -12,18 +12,18 @@
   }
 
   const swatches = [
-    { svg: svg('<polygon points="0,-8 8,0 0,8 -8,0" fill="#67a3ff"/>'), label: "Shell company" },
-    { svg: svg('<rect x="-7" y="-7" width="14" height="14" fill="#67a3ff"/>'), label: "Bank" },
-    { svg: svg('<polygon points="8,0 4,6.9 -4,6.9 -8,0 -4,-6.9 4,-6.9" fill="#67a3ff"/>'), label: "Crypto service" },
-    { svg: svg('<polygon points="0,-8 7,6 -7,6" fill="#67a3ff"/>'), label: "Disposable wallet" },
-    { svg: svg('<circle cx="0" cy="0" r="7" fill="#67a3ff"/>'), label: "Individual / company" }
+    { svg: svg('<polygon points="0,-8 8,0 0,8 -8,0" fill="#eab873"/>'), label: "Shell company" },
+    { svg: svg('<rect x="-7" y="-7" width="14" height="14" fill="#eab873"/>'), label: "Bank" },
+    { svg: svg('<polygon points="8,0 4,6.9 -4,6.9 -8,0 -4,-6.9 4,-6.9" fill="#eab873"/>'), label: "Crypto service" },
+    { svg: svg('<polygon points="0,-8 7,6 -7,6" fill="#eab873"/>'), label: "Disposable wallet" },
+    { svg: svg('<circle cx="0" cy="0" r="7" fill="#eab873"/>'), label: "Individual / company" }
   ];
 
   const annotations = [
-    { svg: svg('<circle cx="0" cy="0" r="5" fill="#ef4444"/><circle cx="0" cy="0" r="9" fill="none" stroke="#ef4444" stroke-width="2"/>'), label: "Sanctioned (red halo)" },
-    { svg: svg('<circle cx="0" cy="0" r="4" fill="#67a3ff"/><circle cx="0" cy="0" r="9" fill="none" stroke="#67a3ff" stroke-width="1.5" opacity="0.7"/>'), label: "Mixer (pulsing ring)" },
-    { svg: svg('<circle cx="0" cy="0" r="5" fill="#ef4444"/><circle cx="0" cy="0" r="8" fill="none" stroke="#f59e0b" stroke-width="1.5"/>'), label: "Shell-chain member" },
-    { svg: svg('<line x1="-9" y1="0" x2="9" y2="0" stroke="#67a3ff" stroke-width="2.4" stroke-dasharray="4 3"/>'), label: "Traced fund-flow path" }
+    { svg: svg('<circle cx="0" cy="0" r="5" fill="#e6695c"/><circle cx="0" cy="0" r="9" fill="none" stroke="#e6695c" stroke-width="2"/>'), label: "Sanctioned (red halo)" },
+    { svg: svg('<circle cx="0" cy="0" r="4" fill="#eab873"/><circle cx="0" cy="0" r="9" fill="none" stroke="#eab873" stroke-width="1.5" opacity="0.7"/>'), label: "Mixer (pulsing ring)" },
+    { svg: svg('<circle cx="0" cy="0" r="5" fill="#e6695c"/><circle cx="0" cy="0" r="8" fill="none" stroke="#eab873" stroke-width="1.5"/>'), label: "Shell-chain member" },
+    { svg: svg('<line x1="-9" y1="0" x2="9" y2="0" stroke="#eab873" stroke-width="2.4" stroke-dasharray="4 3"/>'), label: "Traced fund-flow path" }
   ];
 
   function mount(container) {
