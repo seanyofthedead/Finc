@@ -45,6 +45,7 @@ function installFinCEN() {
   loadScriptIntoWindow("js/entity-panel.js");
   loadScriptIntoWindow("js/legend.js");
   loadScriptIntoWindow("js/graph-interactions.js");
+  loadScriptIntoWindow("js/signal-table.js");
 }
 
 installFinCEN();

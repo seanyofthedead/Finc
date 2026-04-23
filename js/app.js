@@ -90,7 +90,9 @@
     activeScreen: "screen-pipeline",
     batchProgress: 0,
     streamCount: 0,
-    selectedFeatureCase: null,
+    selectedFeatureEntity: null,
+    signalSearch: "",
+    signalSort: { column: null, direction: null },
     selectedWorkspaceCase: null,
     selectedModule: null,
     guideIndex: -1,
@@ -317,71 +319,160 @@
   }
 
   function renderSignalEngineering() {
-    const features = engine.getDerivedFeatures();
+    const rawFeatures = engine.getDerivedFeatures();
+    const searched = window.FinCENSignalTable.filterFeatures(rawFeatures, appState.signalSearch);
+    const sortSpec = appState.signalSort;
+    const hasExplicitSort = sortSpec && sortSpec.column && sortSpec.direction;
+    const displayed = hasExplicitSort
+      ? window.FinCENSignalTable.sortFeatures(searched, sortSpec)
+      : window.FinCENSignalTable.compoundDefaultSort(searched);
+
     ui.featureTableBody.innerHTML = "";
-    features.forEach((f) => {
-      const series = engine.getSignalSeries(f.caseId);
+
+    if (ui.signalResultCount) {
+      ui.signalResultCount.textContent =
+        "Showing " + displayed.length + " of " + rawFeatures.length + " rows";
+    }
+
+    if (displayed.length === 0) {
+      const trEmpty = document.createElement("tr");
+      const tdEmpty = document.createElement("td");
+      tdEmpty.colSpan = 7;
+      tdEmpty.className = "signal-empty-state-cell";
+      const isSearch = Boolean(appState.signalSearch);
+      tdEmpty.innerHTML = emptyState(
+        isSearch
+          ? { icon: "search", title: "No matches for \"" + appState.signalSearch + "\"", body: "Clear the search or try an entity name fragment.", hint: "" }
+          : { icon: "search", title: "No entities match this typology", body: "Pick a different typology above, or select \"All\" to see the full graph.", hint: "" }
+      );
+      trEmpty.appendChild(tdEmpty);
+      ui.featureTableBody.appendChild(trEmpty);
+      appState.selectedFeatureEntity = null;
+      if (window.FinCENIcons) window.FinCENIcons.hydrate(ui.featureTableBody);
+      renderSignalDetail(displayed);
+      return;
+    }
+
+    const renderTypologyCell = (f) => {
+      if (!f.typologyTag) return "<td></td>";
+      return "<td><span class='pill " + typologyPillClass(f.typologyTag) + "'>" + f.typologyTag + "</span></td>";
+    };
+
+    const provenanceTitle = "Case-enriched: formula includes risk-score and typology factor.";
+    const provIcon = (enriched) => {
+      if (!enriched) return "";
+      const iconHtml = window.FinCENIcons ? window.FinCENIcons.render("info", { size: 12 }) : "ⓘ";
+      return " <span class='signal-provenance-icon' title='" + provenanceTitle + "'>" + iconHtml + "</span>";
+    };
+
+    displayed.forEach((f) => {
+      const series = engine.getSignalSeriesByEntity(f.entityId);
       const txPerDay = series ? series.summary.txPerDay : 0;
       const peerDevMean = series ? series.summary.peerDeviationMean : 0;
       const tr = document.createElement("tr");
+      if (f._caseEnriched) tr.className = "signal-row--case-enriched";
+      tr.setAttribute("data-entity-id", f.entityId);
+      const caseChip = f._caseEnriched
+        ? "<span class='signal-case-chip mono'>" + f.caseId + "</span> "
+        : "";
       tr.innerHTML =
-        "<td>" + f.entityName + "</td>" +
-        "<td>" + txPerDay.toFixed(2) + " tx/day</td>" +
-        "<td>" + f.derived.jurisdictionRiskScore + "</td>" +
-        "<td>" + f.derived.beneficialOwnershipNetworkScore + "</td>" +
-        "<td>" + formatSigned(peerDevMean, 1) + "\u03c3</td>" +
-        "<td><span class='pill " + typologyPillClass(f.typologyTag) + "'>" + f.typologyTag + "</span></td>" +
+        "<td>" + caseChip + f.entityName + "</td>" +
+        "<td>" + txPerDay.toFixed(2) + " tx/day" + provIcon(f._caseEnriched) + "</td>" +
+        "<td>" + f.derived.jurisdictionRiskScore + provIcon(f._caseEnriched) + "</td>" +
+        "<td>" + f.derived.beneficialOwnershipNetworkScore + provIcon(f._caseEnriched) + "</td>" +
+        "<td>" + formatSigned(peerDevMean, 1) + "\u03c3" + provIcon(f._caseEnriched) + "</td>" +
+        renderTypologyCell(f) +
         "<td>" + (f.derived.crossBorderExposureFlag ? "Yes" : "No") + "</td>";
       tr.addEventListener("click", () => {
-        appState.selectedFeatureCase = f.caseId;
+        appState.selectedFeatureEntity = f.entityId;
         Array.from(ui.featureTableBody.querySelectorAll("tr")).forEach((row) => row.classList.remove("selected"));
         tr.classList.add("selected");
-        renderSignalDetail();
+        renderSignalDetail(displayed);
       });
       ui.featureTableBody.appendChild(tr);
     });
-    appState.selectedFeatureCase = appState.selectedFeatureCase || features[0].caseId;
-    const firstRow = ui.featureTableBody.querySelector("tr");
-    if (firstRow) {
-      firstRow.classList.add("selected");
+
+    appState.selectedFeatureEntity = window.FinCENSignalTable.chooseDefaultSelection(
+      displayed,
+      appState.selectedFeatureEntity
+    );
+
+    if (appState.selectedFeatureEntity) {
+      const selectedRow = ui.featureTableBody.querySelector(
+        "tr[data-entity-id=\"" + appState.selectedFeatureEntity + "\"]"
+      );
+      if (selectedRow) selectedRow.classList.add("selected");
     }
-    renderSignalDetail();
+    if (window.FinCENIcons) window.FinCENIcons.hydrate(ui.featureTableBody);
+    renderSignalDetail(displayed);
   }
 
-  function renderSignalDetail() {
-    const features = engine.getDerivedFeatures();
-    const detail = features.find((f) => f.caseId === appState.selectedFeatureCase) || features[0];
-    if (!detail) {
-      return;
-    }
-    const series = engine.getSignalSeries(detail.caseId);
-    const txPerDay = series ? series.summary.txPerDay.toFixed(2) : "n/a";
-    const peerDevMean = series ? formatSigned(series.summary.peerDeviationMean, 2) : "n/a";
-    const peerDevPeak = series ? series.summary.peerDeviationPeakAbs.toFixed(2) : "n/a";
-    ui.featureDetail.innerHTML =
-      "<div class='metric-row'><span class='muted'>Case</span><span>" + detail.caseId + "</span></div>" +
-      "<div class='metric-row'><span class='muted'>Entity</span><span>" + detail.entityName + "</span></div>" +
-      "<div class='metric-row'><span class='muted'>Typology</span><span>" + detail.typologyTag + "</span></div>" +
-      "<div class='metric-row'><span class='muted'>Raw Inputs</span><span>" + detail.rawInputs.join("; ") + "</span></div>" +
-      "<div class='metric-row'><span class='muted'>Velocity</span><span>" + txPerDay + " tx/day</span></div>" +
-      "<div class='metric-row'><span class='muted'>Peer Deviation</span><span>mean " + peerDevMean + "\u03c3 \u2022 peak " + peerDevPeak + "\u03c3 (cohort: " + (series ? series.peerDeviation.peerGroup : "n/a") + ")</span></div>" +
-      "<div class='metric-row'><span class='muted'>Enrichment</span><span>" + detail.enrichmentSources.join(", ") + "</span></div>";
+  function renderSignalDetail(precomputedFeatures) {
+    // Flicker guard: capture the selection at the top of the render pass. If
+    // the user clicks another row mid-render, bail on the second-half draws.
+    const currentEntity = appState.selectedFeatureEntity;
 
-    if (!series) {
+    if (!currentEntity) {
+      ui.featureDetail.innerHTML = "<p class='muted'>Select a row to inspect raw inputs, derived features, and enrichment sources.</p>";
       return;
     }
+
+    const features = precomputedFeatures || engine.getDerivedFeatures();
+    const detail = features.find((f) => f.entityId === currentEntity);
+    if (!detail) {
+      ui.featureDetail.innerHTML = "<p class='muted'>Selected entity is not in the current view.</p>";
+      return;
+    }
+
+    const series = engine.getSignalSeriesByEntity(currentEntity);
+
+    const rows = [];
+    if (detail._caseEnriched) {
+      rows.push("<div class='metric-row'><span class='muted'>Case</span><span>" + detail.caseId + "</span></div>");
+    }
+    rows.push("<div class='metric-row'><span class='muted'>Entity</span><span>" + detail.entityName + "</span></div>");
+    rows.push("<div class='metric-row'><span class='muted'>Kind</span><span>" + (detail.entityKind || "\u2014") + "</span></div>");
+    rows.push("<div class='metric-row'><span class='muted'>Jurisdiction</span><span>" + (detail.jurisdiction || "\u2014") + "</span></div>");
+    if (detail._caseEnriched) {
+      rows.push("<div class='metric-row'><span class='muted'>Typology</span><span>" + detail.typologyTag + "</span></div>");
+      rows.push("<div class='metric-row'><span class='muted'>Raw Inputs</span><span>" + (detail.rawInputs || []).join("; ") + "</span></div>");
+    }
+    if (series) {
+      const txPerDay = series.summary.txPerDay.toFixed(2);
+      const peerDevMean = formatSigned(series.summary.peerDeviationMean, 2);
+      const peerDevPeak = series.summary.peerDeviationPeakAbs.toFixed(2);
+      rows.push("<div class='metric-row'><span class='muted'>Velocity</span><span>" + txPerDay + " tx/day</span></div>");
+      rows.push("<div class='metric-row'><span class='muted'>Peer Deviation</span><span>mean " + peerDevMean + "\u03c3 \u2022 peak " + peerDevPeak + "\u03c3 (cohort: " + series.peerDeviation.peerGroup + ")</span></div>");
+    } else {
+      rows.push("<div class='metric-row'><span class='muted'>Velocity</span><span>No signal data available for this entity.</span></div>");
+    }
+    if (detail._caseEnriched) {
+      rows.push("<div class='metric-row'><span class='muted'>Enrichment</span><span>" + (detail.enrichmentSources || []).join(", ") + "</span></div>");
+    }
+    ui.featureDetail.innerHTML = rows.join("");
+
+    if (appState.selectedFeatureEntity !== currentEntity) return;
+    if (!series) {
+      [ui.velocitySparkline, ui.deviationSparkline].forEach((c) => {
+        if (c && c.getContext) c.getContext('2d').clearRect(0, 0, c.width, c.height);
+      });
+      return;
+    }
+
     const firstLabel = series.bucketLabels[0];
     const lastLabel = series.bucketLabels[series.bucketLabels.length - 1];
     const xRange = firstLabel + " \u2192 " + lastLabel;
     const vPeak = Math.max.apply(null, series.velocity.values.concat([0]));
     const dAbsPeak = Math.max.apply(null, series.peerDeviation.values.map(Math.abs).concat([0]));
 
+    if (appState.selectedFeatureEntity !== currentEntity) return;
     window.FinCENViz.drawSparkline(ui.velocitySparkline, series.velocity.values, {
       yLabel: series.velocity.unit,
       xLabel: xRange,
       pointLabels: series.bucketLabels,
       ariaLabel: detail.entityName + " transaction velocity across " + series.bucketLabels.length + " windows " + firstLabel + " to " + lastLabel + "; peak " + vPeak + " " + series.velocity.unit + "; total tx/day " + series.summary.txPerDay.toFixed(2)
     });
+    if (appState.selectedFeatureEntity !== currentEntity) return;
     window.FinCENViz.drawSparkline(ui.deviationSparkline, series.peerDeviation.values, {
       yLabel: series.peerDeviation.unit,
       xLabel: xRange,
