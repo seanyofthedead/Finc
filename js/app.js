@@ -71,6 +71,7 @@
     confirmYesBtn: document.getElementById("confirm-yes-btn"),
     confirmNoBtn: document.getElementById("confirm-no-btn"),
 
+    kpiTotalEntities: document.getElementById("kpi-total-entities"),
     kpiTotalCases: document.getElementById("kpi-total-cases"),
     kpiEnforcement: document.getElementById("kpi-enforcement"),
     kpiIntelligence: document.getElementById("kpi-intelligence"),
@@ -839,6 +840,10 @@
         el.textContent = typeof val === "number" ? (Number.isInteger(val) ? String(val) : val.toFixed(1)) : String(val);
       }
     };
+    // Total Entities reflects the ER graph's current typology-filtered population
+    // so the KPI moves in lockstep with the graph and Signal table.
+    const totalEntities = engine.getFilteredGraph().nodes.length;
+    write(ui.kpiTotalEntities, totalEntities);
     write(ui.kpiTotalCases, total);
     write(ui.kpiEnforcement, enforcement);
     write(ui.kpiIntelligence, intelligence);
