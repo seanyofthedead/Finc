@@ -54,33 +54,47 @@
     return byEntity;
   }
 
-  function deriveFeatures(data) {
+  // Two-track feature derivation: case-subject rows apply the full formula with
+  // case-specific inputs (riskScore, typologyFactor, jurisdictionRelevance);
+  // non-case entities use the same formula shape with those inputs zeroed
+  // (rs=0, jurRel=0, typFactor=1). Characterization test locks case-row values.
+  function deriveFeatures(data, entityList) {
     const stats = buildTransactionStats(data);
-    const entityIndex = indexById(data.entities);
+    const entities = entityList || data.entities;
+    const caseByEntityId = {};
+    (data.flaggedCases || []).forEach((c) => {
+      caseByEntityId[c.entityId] = c;
+    });
 
-    return data.flaggedCases.map((c) => {
-      const entity = entityIndex[c.entityId];
-      const s = stats[c.entityId];
+    return entities.map((entity) => {
+      const overlay = caseByEntityId[entity.id] || null;
+      const s = stats[entity.id] || { txCount: 0, crossBorder: 0, peerSet: new Set() };
       const jurisdictionBase = (data.jurisdictionRisk[entity.jurisdiction] || 0.35) * 100;
-      const typologyFactor = data.typologySeverity[c.typology] || 1;
-      const velocityScore = clamp(round((s.txCount * 3.4 + c.riskScore * 0.24) * typologyFactor), 0, 100);
-      const ownershipNetworkScore = clamp(round((s.peerSet.size * 9 + c.jurisdictionRelevance * 0.35)), 0, 100);
-      const peerDeviation = clamp(round(Math.abs(c.riskScore - (50 + s.txCount)) * 0.92), 0, 100);
-      const jurisdictionRiskScore = clamp(round(jurisdictionBase + c.jurisdictionRelevance * 0.2), 0, 100);
+
+      const rs = overlay ? overlay.riskScore : 0;
+      const jurRel = overlay ? overlay.jurisdictionRelevance : 0;
+      const typFactor = overlay ? (data.typologySeverity[overlay.typology] || 1) : 1;
+
+      const velocityScore = clamp(round((s.txCount * 3.4 + rs * 0.24) * typFactor), 0, 100);
+      const ownershipNetworkScore = clamp(round(s.peerSet.size * 9 + jurRel * 0.35), 0, 100);
+      const peerDeviation = clamp(round(Math.abs(rs - (50 + s.txCount)) * 0.92), 0, 100);
+      const jurisdictionRiskScore = clamp(round(jurisdictionBase + jurRel * 0.2), 0, 100);
       const crossBorderExposure = s.crossBorder >= 4;
-      const enrichmentSources = c.enrichmentSources;
 
       return {
-        caseId: c.caseId,
-        entityId: c.entityId,
+        caseId: overlay ? overlay.caseId : null,
+        entityId: entity.id,
         entityName: entity.name,
-        typologyTag: c.typology,
-        rawInputs: c.rawInputs,
-        enrichmentSources,
-        riskScore: c.riskScore,
-        confidence: c.confidence,
-        contributingFeatures: c.contributingFeatures,
-        whyFlagged: c.whyFlagged,
+        entityKind: entity.kind,
+        jurisdiction: entity.jurisdiction,
+        typologyTag: overlay ? overlay.typology : null,
+        rawInputs: overlay ? overlay.rawInputs : null,
+        enrichmentSources: overlay ? overlay.enrichmentSources : null,
+        riskScore: overlay ? overlay.riskScore : null,
+        confidence: overlay ? overlay.confidence : null,
+        contributingFeatures: overlay ? overlay.contributingFeatures : null,
+        whyFlagged: overlay ? overlay.whyFlagged : null,
+        _caseEnriched: Boolean(overlay),
         derived: {
           transactionVelocityScore: velocityScore,
           jurisdictionRiskScore,

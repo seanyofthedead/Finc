@@ -43,9 +43,13 @@ describe("deriveFeatures characterization (10-case demo-fidelity guard)", () => 
     });
   });
 
-  it("returns exactly 10 rows against stock data (pre-extension baseline)", () => {
+  it("contains rows for all 10 expected case subjects (demo-fidelity: no case lost)", () => {
     const engine = window.FinCENEngine.buildEngine(window.FinCENData);
     const features = engine.getDerivedFeatures();
-    expect(features.length).toBe(10);
+    const caseRowCount = features.filter((f) => f.caseId != null).length;
+    expect(caseRowCount).toBe(10);
+    EXPECTED.forEach((snap) => {
+      expect(features.find((f) => f.caseId === snap.caseId)).toBeDefined();
+    });
   });
 });
