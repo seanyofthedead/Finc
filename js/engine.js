@@ -477,7 +477,14 @@
         return state;
       },
       getDerivedFeatures() {
-        return deriveFeatures(data);
+        // Mirror the ER graph's filtered population so the Signal table and
+        // the Analytics graph render the same entity set under any typology.
+        const filtered = filterGraphByTypology(data, state.selectedTypology);
+        const entityIndex = indexById(data.entities);
+        const entityList = filtered.nodes
+          .map((n) => entityIndex[n.id])
+          .filter(Boolean);
+        return deriveFeatures(data, entityList);
       },
       getSignalSeries(caseId) {
         if (!signalSeriesCache[caseId]) {

@@ -108,3 +108,58 @@ describe("deriveFeatures extended to all entities (two-track formulas)", () => {
     expect(row.derived.transactionVelocityScore).toBe(59.9);
   });
 });
+
+describe("getDerivedFeatures typology-filter parity (R1, R5)", () => {
+  it("default ('All' filter) returns one row per entity in data.entities", () => {
+    const engine = window.FinCENEngine.buildEngine(window.FinCENData);
+    expect(engine.getState().selectedTypology).toBe("All");
+    expect(engine.getDerivedFeatures().length).toBe(window.FinCENData.entities.length);
+  });
+
+  it("Crypto Layering narrows to a non-empty subset strictly smaller than the full population", () => {
+    const engine = window.FinCENEngine.buildEngine(window.FinCENData);
+    engine.setTypologyFilter("Crypto Layering");
+    const features = engine.getDerivedFeatures();
+    expect(features.length).toBeGreaterThan(0);
+    expect(features.length).toBeLessThan(window.FinCENData.entities.length);
+  });
+
+  it("bidirectional parity: getDerivedFeatures entity set equals getFilteredGraph node set for every typology", () => {
+    const typologies = ["All"].concat(window.FinCENData.typologies);
+    typologies.forEach((t) => {
+      const engine = window.FinCENEngine.buildEngine(window.FinCENData);
+      engine.setTypologyFilter(t);
+      const featureIds = engine.getDerivedFeatures().map((f) => f.entityId).sort();
+      const graphIds = engine.getFilteredGraph().nodes.map((n) => n.id).sort();
+      expect(featureIds).toEqual(graphIds);
+    });
+  });
+
+  it("Structuring (no flagged cases in stock data) returns [] without throwing", () => {
+    const engine = window.FinCENEngine.buildEngine(window.FinCENData);
+    engine.setTypologyFilter("Structuring");
+    expect(() => engine.getDerivedFeatures()).not.toThrow();
+    expect(engine.getDerivedFeatures()).toEqual([]);
+  });
+
+  it("switching back to 'All' restores the full population", () => {
+    const engine = window.FinCENEngine.buildEngine(window.FinCENData);
+    engine.setTypologyFilter("Crypto Layering");
+    expect(engine.getDerivedFeatures().length).toBeLessThan(window.FinCENData.entities.length);
+    engine.setTypologyFilter("All");
+    expect(engine.getDerivedFeatures().length).toBe(window.FinCENData.entities.length);
+  });
+
+  it("narrowed feature set preserves the _caseEnriched flag correctly for rows that are case subjects", () => {
+    const engine = window.FinCENEngine.buildEngine(window.FinCENData);
+    engine.setTypologyFilter("Crypto Layering");
+    const features = engine.getDerivedFeatures();
+    const cryptoCaseEntityIds = ["E0186", "E0187", "E0169", "E0206"]; // from stock data
+    cryptoCaseEntityIds.forEach((eid) => {
+      const row = features.find((f) => f.entityId === eid);
+      expect(row, `expected row for ${eid} in Crypto Layering subgraph`).toBeDefined();
+      expect(row._caseEnriched).toBe(true);
+      expect(row.typologyTag).toBe("Crypto Layering");
+    });
+  });
+});
