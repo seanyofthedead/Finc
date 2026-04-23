@@ -238,6 +238,18 @@
               <h3 style="margin: 0">Flagged Case Patterns</h3>
               <div id="typology-filter-group"></div>
             </div>
+            <div class="signal-controls">
+              <input type="search" id="case-cards-search" class="signal-search" placeholder="Search by case ID, entity, or typology..." aria-label="Search flagged case cards" autocomplete="off" />
+              <select id="case-cards-sort" class="signal-search" aria-label="Sort flagged case cards" style="flex: 0 0 auto; max-width: 220px">
+                <option value="risk-desc">Risk (high &rarr; low)</option>
+                <option value="risk-asc">Risk (low &rarr; high)</option>
+                <option value="confidence-desc">Confidence (high &rarr; low)</option>
+                <option value="confidence-asc">Confidence (low &rarr; high)</option>
+                <option value="typology-asc">Typology (A&rarr;Z)</option>
+                <option value="caseId-asc">Case ID</option>
+              </select>
+              <span class="signal-result-count mono" id="case-cards-result-count"></span>
+            </div>
             <div class="case-cards" id="case-cards-container"></div>
           </div>
           <div id="entity-panel-host"></div>

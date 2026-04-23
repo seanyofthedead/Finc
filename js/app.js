@@ -46,6 +46,9 @@
     heatmapContainer: document.getElementById("heatmap-container"),
     typologyFilterGroup: document.getElementById("typology-filter-group"),
     caseCardsContainer: document.getElementById("case-cards-container"),
+    caseCardsSearch: document.getElementById("case-cards-search"),
+    caseCardsSort: document.getElementById("case-cards-sort"),
+    caseCardsResultCount: document.getElementById("case-cards-result-count"),
 
     highRiskSlider: document.getElementById("high-risk-slider"),
     confidenceSlider: document.getElementById("confidence-slider"),
@@ -103,6 +106,8 @@
     signalSort: { column: null, direction: null },
     workspaceSearch: "",
     routingSearch: "",
+    caseCardsSearch: "",
+    caseCardsSort: "risk-desc",
     selectedWorkspaceCase: null,
     selectedModule: null,
     guideIndex: -1,
@@ -727,21 +732,56 @@
 
   function renderCaseCards(routingResults) {
     ui.caseCardsContainer.innerHTML = "";
-    if (!routingResults.length) {
-      ui.caseCardsContainer.innerHTML = emptyState({
-        icon: "search",
-        title: "No cases match the current filter.",
-        body: "Adjust the typology filter above or widen the policy thresholds on the Triage screen.",
-        hint: "Filter \u00b7 No results"
-      });
+    const entityById = {};
+    data.entities.forEach((e) => { entityById[e.id] = e; });
+
+    // Apply search filter
+    const q = (appState.caseCardsSearch || "").toLowerCase();
+    const filtered = routingResults.filter((c) => {
+      if (!q) return true;
+      const entityName = entityById[c.entityId] ? entityById[c.entityId].name.toLowerCase() : "";
+      return c.caseId.toLowerCase().indexOf(q) !== -1
+        || c.typology.toLowerCase().indexOf(q) !== -1
+        || (c.entityId || "").toLowerCase().indexOf(q) !== -1
+        || entityName.indexOf(q) !== -1;
+    });
+
+    // Apply sort
+    const sorted = filtered.slice();
+    const sortKey = appState.caseCardsSort || "risk-desc";
+    const comparators = {
+      "risk-desc":       (a, b) => b.riskScore - a.riskScore,
+      "risk-asc":        (a, b) => a.riskScore - b.riskScore,
+      "confidence-desc": (a, b) => b.confidence - a.confidence,
+      "confidence-asc":  (a, b) => a.confidence - b.confidence,
+      "typology-asc":    (a, b) => a.typology.localeCompare(b.typology) || b.riskScore - a.riskScore,
+      "caseId-asc":      (a, b) => a.caseId.localeCompare(b.caseId)
+    };
+    sorted.sort(comparators[sortKey] || comparators["risk-desc"]);
+
+    if (ui.caseCardsResultCount) {
+      ui.caseCardsResultCount.textContent = q
+        ? "Showing " + sorted.length + " of " + routingResults.length
+        : "";
+    }
+
+    if (!sorted.length) {
+      ui.caseCardsContainer.innerHTML = emptyState(
+        q
+          ? { icon: "search", title: "No cases match '" + q + "'.", body: "Clear the search or broaden the typology filter.", hint: "Search \u00b7 No results" }
+          : { icon: "search", title: "No cases match the current filter.", body: "Adjust the typology filter above or widen the policy thresholds on the Triage screen.", hint: "Filter \u00b7 No results" }
+      );
       if (window.FinCENIcons) window.FinCENIcons.hydrate(ui.caseCardsContainer);
       return;
     }
-    routingResults.forEach((c) => {
+    sorted.forEach((c) => {
+      const entity = entityById[c.entityId];
+      const entityName = entity ? entity.name : c.entityId;
       const card = document.createElement("div");
       card.className = "case-card";
       card.innerHTML =
         "<div class='metric-row'><strong>" + c.caseId + "</strong><span class='pill " + scoreClass(c.riskScore) + "'>" + c.typology + "</span></div>" +
+        "<div class='metric-row'><span class='muted'>Entity</span><span>" + entityName + "</span></div>" +
         "<div class='metric-row'><span class='muted'>Confidence</span><span>" + c.confidence + "%</span></div>" +
         "<div class='metric-row'><span class='muted'>Destination</span><span>" + c.destination + "</span></div>" +
         "<div class='muted' style='font-size:0.82rem;margin:6px 0'>" + c.contributingFeatures.join(" | ") + "</div>" +
@@ -753,7 +793,7 @@
     });
   }
 
-  function renderRouting() {
+    function renderRouting() {
     const routing = engine.getRouting();
     const queues = routing.queues;
 
@@ -1398,6 +1438,21 @@
     });
   }
 
+  function bindCaseCardsControls() {
+    if (ui.caseCardsSearch) {
+      ui.caseCardsSearch.addEventListener("input", (ev) => {
+        appState.caseCardsSearch = ev.target.value || "";
+        renderAnalytics();
+      });
+    }
+    if (ui.caseCardsSort) {
+      ui.caseCardsSort.addEventListener("change", (ev) => {
+        appState.caseCardsSort = ev.target.value || "risk-desc";
+        renderAnalytics();
+      });
+    }
+  }
+
   function bindSignalTableControls() {
     if (ui.signalSearch) {
       ui.signalSearch.addEventListener("input", (ev) => {
@@ -1440,6 +1495,7 @@
     bindPolicyControls();
     bindWorkspaceActions();
     bindRoutingSearch();
+    bindCaseCardsControls();
     bindSignalTableControls();
     startStatusClock();
     bindGuide();
