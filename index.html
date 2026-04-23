@@ -277,7 +277,13 @@
             <canvas class="mini-canvas" id="triage-scatter-canvas"></canvas>
           </div>
 
-          <div class="routing-board" id="routing-board" style="margin-top: 16px"></div>
+          <div class="card" style="margin-top: 16px">
+            <div class="signal-controls">
+              <input type="search" id="routing-search" class="signal-search" placeholder="Search cases in queues by ID, entity, or typology..." aria-label="Search routing board" autocomplete="off" />
+              <span class="signal-result-count mono" id="routing-result-count"></span>
+            </div>
+            <div class="routing-board" id="routing-board"></div>
+          </div>
         </section>
 
         <section class="screen" id="screen-workspace">

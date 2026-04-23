@@ -55,6 +55,8 @@
     jurisdictionValue: document.getElementById("jurisdiction-value"),
     decisionPath: document.getElementById("decision-path"),
     routingBoard: document.getElementById("routing-board"),
+    routingSearch: document.getElementById("routing-search"),
+    routingResultCount: document.getElementById("routing-result-count"),
     triageScatterCanvas: document.getElementById("triage-scatter-canvas"),
 
     workspaceCaseSearch: document.getElementById("workspace-case-search"),
@@ -100,6 +102,7 @@
     signalSearch: "",
     signalSort: { column: null, direction: null },
     workspaceSearch: "",
+    routingSearch: "",
     selectedWorkspaceCase: null,
     selectedModule: null,
     guideIndex: -1,
@@ -772,27 +775,52 @@
       [Q.ANALYST_REVIEW]: { title: "No cases awaiting analyst review.", body: "Medium-risk cases land here for human judgment." },
       [Q.MONITORING]:   { title: "No cases in passive monitoring.", body: "Low-risk cases auto-close here." }
     };
-    Object.keys(queues).forEach((q) => {
+    const entityById = {};
+    data.entities.forEach((e) => { entityById[e.id] = e; });
+    const q = (appState.routingSearch || "").toLowerCase();
+    const matchesSearch = (c) => {
+      if (!q) return true;
+      const entity = entityById[c.entityId];
+      const name = entity ? entity.name.toLowerCase() : "";
+      return c.caseId.toLowerCase().indexOf(q) !== -1
+        || c.typology.toLowerCase().indexOf(q) !== -1
+        || (c.entityId || "").toLowerCase().indexOf(q) !== -1
+        || name.indexOf(q) !== -1;
+    };
+    let totalShown = 0;
+    let totalCases = 0;
+    Object.keys(queues).forEach((qname) => {
+      const allInQueue = queues[qname];
+      totalCases += allInQueue.length;
+      const filtered = allInQueue.filter(matchesSearch);
+      totalShown += filtered.length;
       const col = document.createElement("div");
       col.className = "routing-col";
       const title = document.createElement("h4");
-      title.textContent = q + " (" + queues[q].length + ")";
+      title.textContent = q
+        ? qname + " (" + filtered.length + " / " + allInQueue.length + ")"
+        : qname + " (" + allInQueue.length + ")";
       col.appendChild(title);
 
-      if (queues[q].length === 0) {
-        col.insertAdjacentHTML("beforeend", emptyState({
-          icon: "triage",
-          title: (QUEUE_EMPTY_COPY[q] || {}).title || "Queue empty.",
-          body: (QUEUE_EMPTY_COPY[q] || {}).body || ""
-        }));
+      if (filtered.length === 0) {
+        const copy = q
+          ? { icon: "search", title: "No matches in this queue", body: "Try a different search or clear the input." }
+          : {
+              icon: "triage",
+              title: (QUEUE_EMPTY_COPY[qname] || {}).title || "Queue empty.",
+              body: (QUEUE_EMPTY_COPY[qname] || {}).body || ""
+            };
+        col.insertAdjacentHTML("beforeend", emptyState(copy));
       } else {
-        queues[q]
+        filtered
           .sort((a, b) => b.riskScore - a.riskScore)
           .forEach((c) => {
+            const entity = entityById[c.entityId];
+            const entityName = entity ? entity.name : c.entityId;
             const item = document.createElement("div");
             item.className = "route-card";
             item.innerHTML =
-              "<strong>" + c.caseId + "</strong><br/>" +
+              "<strong>" + c.caseId + "</strong> <span class='muted'>" + entityName + "</span><br/>" +
               "<span class='muted'>" + c.typology + "</span><br/>" +
               "Risk " + c.riskScore + " | Confidence " + c.confidence +
               (c.overridden ? "<br/><span class='pill risk-medium'>Overridden</span>" : "");
@@ -801,6 +829,11 @@
       }
       ui.routingBoard.appendChild(col);
     });
+    if (ui.routingResultCount) {
+      ui.routingResultCount.textContent = q
+        ? "Showing " + totalShown + " of " + totalCases + " cases"
+        : "";
+    }
     if (window.FinCENIcons) window.FinCENIcons.hydrate(ui.routingBoard);
 
     const policy = engine.getState().policy;
@@ -1357,6 +1390,14 @@
     }
   }
 
+  function bindRoutingSearch() {
+    if (!ui.routingSearch) return;
+    ui.routingSearch.addEventListener("input", (ev) => {
+      appState.routingSearch = ev.target.value || "";
+      renderRouting();
+    });
+  }
+
   function bindSignalTableControls() {
     if (ui.signalSearch) {
       ui.signalSearch.addEventListener("input", (ev) => {
@@ -1398,6 +1439,7 @@
     bindNavigation();
     bindPolicyControls();
     bindWorkspaceActions();
+    bindRoutingSearch();
     bindSignalTableControls();
     startStatusClock();
     bindGuide();
