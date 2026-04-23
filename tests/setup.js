@@ -37,6 +37,7 @@ function installFinCEN() {
   loadScriptIntoWindow("js/pattern-detection.js");
   loadScriptIntoWindow("js/path-tracing.js");
   loadScriptIntoWindow("js/motion.js");
+  loadScriptIntoWindow("js/scroll-class.js");
   loadScriptIntoWindow("js/preferences.js");
   loadScriptIntoWindow("js/icons.js");
   loadScriptIntoWindow("js/command-palette.js");

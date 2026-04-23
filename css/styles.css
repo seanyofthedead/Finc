@@ -178,26 +178,28 @@ body.prefs-hide-classification .classification-strip {
   align-items: center;
   gap: var(--space-3);
   contain: layout paint;
-  transition:
-    padding var(--dur-base) var(--ease-standard);
 }
-.topbar.is-compressed {
-  padding: 10px var(--space-4) 10px;
-}
+/* Scroll-compression invariant: the topbar's OUTER BOX HEIGHT must not change
+ * between uncompressed and compressed states. When the topbar above the scroll
+ * position shrinks, Chrome's scroll-anchoring feature adjusts scrollY to keep
+ * visible content stable, which was tripping the scroll-class handler's
+ * hysteresis and producing an oscillation loop (see bindScrollCompression()
+ * in js/app.js and tests/e2e/scroll-compression.spec.js). Eyebrow/subtitle
+ * fade out via opacity + visibility while preserving their layout space, so
+ * the box height is identical in both states. */
 .topbar .eyebrow,
 .topbar .subtitle {
-  overflow: hidden;
-  max-height: 1.4em;
   transition:
     opacity var(--dur-base) var(--ease-standard),
-    max-height var(--dur-base) var(--ease-standard),
-    margin var(--dur-base) var(--ease-standard);
+    visibility 0s linear var(--dur-base);
 }
 .topbar.is-compressed .eyebrow,
 .topbar.is-compressed .subtitle {
   opacity: 0;
-  max-height: 0;
-  margin: 0;
+  visibility: hidden;
+  transition:
+    opacity var(--dur-base) var(--ease-standard),
+    visibility 0s linear 0s;
 }
 /* Display title stays at its natural size in both states — no transform. The
  * topbar's height-reducing animation comes from padding + eyebrow/subtitle

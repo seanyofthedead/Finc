@@ -1024,24 +1024,19 @@
 
   function bindScrollCompression() {
     const topbar = document.querySelector(".topbar");
-    if (!topbar) return;
-    let compressed = false;
+    if (!topbar || !window.FinCENScrollClassToggle) return;
     // Hysteresis: enter compressed mode at 44px, exit at 20px. The 24px
     // dead zone stops the class from flickering on slow or wheel-inertia
-    // scrolling across a single threshold.
-    const onScroll = () => {
-      const y = window.scrollY || window.pageYOffset || 0;
-      let next = compressed;
-      if (!compressed && y > 44) next = true;
-      else if (compressed && y < 20) next = false;
-      if (next !== compressed) {
-        compressed = next;
-        topbar.classList.toggle("is-compressed", compressed);
-        document.body.classList.toggle("is-scrolled", compressed);
+    // scrolling across a single threshold. The shared FinCENScrollClassToggle
+    // primitive enforces the hysteresis contract (see js/scroll-class.js).
+    return window.FinCENScrollClassToggle.bind({
+      enterAt: 44,
+      exitAt: 20,
+      toggle(on) {
+        topbar.classList.toggle("is-compressed", on);
+        document.body.classList.toggle("is-scrolled", on);
       }
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    onScroll();
+    });
   }
 
   function startStatusClock() {
