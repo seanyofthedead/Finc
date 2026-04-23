@@ -37,6 +37,10 @@
     deviationSparklineXend: document.getElementById("deviation-sparkline-xend"),
     velocitySparklineTooltip: document.getElementById("velocity-sparkline-tooltip"),
     deviationSparklineTooltip: document.getElementById("deviation-sparkline-tooltip"),
+    signalSearch: document.getElementById("signal-search"),
+    signalResultCount: document.getElementById("signal-result-count"),
+    signalTableWrapper: document.querySelector(".signal-table-wrapper"),
+    signalSortableHeaders: document.querySelectorAll(".signal-sortable"),
 
     analyticsGraphCanvas: document.getElementById("analytics-graph-canvas"),
     heatmapContainer: document.getElementById("heatmap-container"),
@@ -1301,10 +1305,48 @@
     }
   }
 
+  function bindSignalTableControls() {
+    if (ui.signalSearch) {
+      ui.signalSearch.addEventListener("input", (ev) => {
+        appState.signalSearch = ev.target.value || "";
+        renderSignalEngineering();
+      });
+    }
+    if (ui.signalSortableHeaders) {
+      Array.from(ui.signalSortableHeaders).forEach((th) => {
+        const column = th.getAttribute("data-sort-col");
+        if (!column) return;
+        const toggle = () => {
+          const current = appState.signalSort;
+          let nextDirection;
+          if (current.column === column) {
+            nextDirection = current.direction === "asc" ? "desc" : "asc";
+          } else {
+            nextDirection = window.FinCENSignalTable.defaultColumnDirection(column);
+          }
+          appState.signalSort = { column, direction: nextDirection };
+          Array.from(ui.signalSortableHeaders).forEach((other) => {
+            other.setAttribute("aria-sort", "none");
+          });
+          th.setAttribute("aria-sort", nextDirection === "asc" ? "ascending" : "descending");
+          renderSignalEngineering();
+        };
+        th.addEventListener("click", toggle);
+        th.addEventListener("keydown", (ev) => {
+          if (ev.key === "Enter" || ev.key === " ") {
+            ev.preventDefault();
+            toggle();
+          }
+        });
+      });
+    }
+  }
+
   function boot() {
     bindNavigation();
     bindPolicyControls();
     bindWorkspaceActions();
+    bindSignalTableControls();
     startStatusClock();
     bindGuide();
     bindGlobalKeys();

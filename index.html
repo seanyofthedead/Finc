@@ -149,29 +149,35 @@
             <h2 class="display-head">Raw events, distilled into explainable features.</h2>
             <p class="section-lede">Transaction velocity, jurisdictional exposure, beneficial-ownership depth, peer-group deviation, cross-border flagging — every case carries an audit-quality feature record back to its raw evidence.</p>
           </header>
-          <div class="layout-grid cols-2">
+          <div class="layout-grid cols-2 signals-grid">
             <div class="card">
               <h3>Derived Signal Table</h3>
-              <table>
-                <thead>
-                  <tr>
-                    <th>Entity</th>
-                    <th>
-                      <span class="th-label">Velocity <small class="th-unit">(tx/day)</small></span>
-                      <span class="th-info" tabindex="0" data-icon="info" data-icon-size="12" title="Velocity = this entity's transactions per day, averaged across its active window (first tx &#8594; last tx). Higher = more frequent activity."></span>
-                    </th>
-                    <th>Jurisdiction</th>
-                    <th>Ownership</th>
-                    <th>
-                      <span class="th-label">Peer Dev <small class="th-unit">(mean &#963;)</small></span>
-                      <span class="th-info" tabindex="0" data-icon="info" data-icon-size="12" title="Peer Deviation = per-window, (entity tx count &minus; peer-cohort median) / peer-cohort MAD. This cell shows the mean across all windows &mdash; the sparkline on the right plots each window. Cohort = same kind (e.g. shell_company); falls back to all entities if the kind cohort is degenerate. 0 = at peer median; +2&#963; = well above peers; &#8722;2&#963; = well below."></span>
-                    </th>
-                    <th>Typology</th>
-                    <th>Cross-Border</th>
-                  </tr>
-                </thead>
-                <tbody id="feature-table-body"></tbody>
-              </table>
+              <div class="signal-controls">
+                <input type="search" id="signal-search" class="signal-search" placeholder="Search entity name or ID..." aria-label="Search derived signal table" autocomplete="off" />
+                <span class="signal-result-count mono" id="signal-result-count"></span>
+              </div>
+              <div class="signal-table-wrapper">
+                <table class="signal-table">
+                  <thead>
+                    <tr>
+                      <th role="columnheader" tabindex="0" aria-sort="none" data-sort-col="entityName" class="signal-sortable">Entity</th>
+                      <th role="columnheader" tabindex="0" aria-sort="none" data-sort-col="transactionVelocityScore" class="signal-sortable">
+                        <span class="th-label">Velocity <small class="th-unit">(tx/day)</small></span>
+                        <span class="th-info" tabindex="0" data-icon="info" data-icon-size="12" title="Velocity = this entity's transactions per day, averaged across its active window (first tx &#8594; last tx). Higher = more frequent activity."></span>
+                      </th>
+                      <th role="columnheader" tabindex="0" aria-sort="none" data-sort-col="jurisdictionRiskScore" class="signal-sortable">Jurisdiction</th>
+                      <th role="columnheader" tabindex="0" aria-sort="none" data-sort-col="beneficialOwnershipNetworkScore" class="signal-sortable">Ownership</th>
+                      <th role="columnheader" tabindex="0" aria-sort="none" data-sort-col="peerGroupDeviation" class="signal-sortable">
+                        <span class="th-label">Peer Dev <small class="th-unit">(mean &#963;)</small></span>
+                        <span class="th-info" tabindex="0" data-icon="info" data-icon-size="12" title="Peer Deviation = per-window, (entity tx count &minus; peer-cohort median) / peer-cohort MAD. This cell shows the mean across all windows &mdash; the sparkline on the right plots each window. Cohort = same kind (e.g. shell_company); falls back to all entities if the kind cohort is degenerate. 0 = at peer median; +2&#963; = well above peers; &#8722;2&#963; = well below."></span>
+                      </th>
+                      <th>Typology</th>
+                      <th>Cross-Border</th>
+                    </tr>
+                  </thead>
+                  <tbody id="feature-table-body"></tbody>
+                </table>
+              </div>
             </div>
             <div class="card">
               <h3>Selected Entity Details</h3>
