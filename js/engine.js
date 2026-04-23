@@ -349,11 +349,10 @@
     return { buckets: BUCKETS, bucketMs, minTs, maxTs, bucketDays, byEntity, firstTx, lastTx };
   }
 
-  function buildSignalSeries(data, caseId, stats) {
-    const caseRecord = (data.flaggedCases || []).find((c) => c.caseId === caseId);
-    if (!caseRecord) return null;
-    const entityIndex = indexById(data.entities || []);
-    const entity = entityIndex[caseRecord.entityId];
+  // Entity-keyed primitive. Computes velocity, peer-deviation, and summary
+  // from transaction stats and the entity's kind cohort. caseId is a label
+  // stitched on by callers (null when the entity is not a case subject).
+  function buildSignalSeriesForEntity(data, entity, stats) {
     if (!entity) return null;
 
     const { buckets, byEntity, firstTx, lastTx, minTs, bucketMs, bucketDays } = stats;
@@ -420,7 +419,7 @@
     });
 
     return {
-      caseId,
+      caseId: null,
       bucketDays,
       bucketLabels,
       velocity: {
@@ -442,6 +441,18 @@
         peerDeviationPeakAbs
       }
     };
+  }
+
+  // Thin caseId wrapper — resolves caseId to entity, delegates, stamps caseId.
+  // Preserves the pre-existing getSignalSeries(caseId) contract byte-for-byte.
+  function buildSignalSeries(data, caseId, stats) {
+    const caseRecord = (data.flaggedCases || []).find((c) => c.caseId === caseId);
+    if (!caseRecord) return null;
+    const entity = indexById(data.entities || [])[caseRecord.entityId];
+    const series = buildSignalSeriesForEntity(data, entity, stats);
+    if (!series) return null;
+    series.caseId = caseId;
+    return series;
   }
 
   function createAuditLog(data) {
@@ -471,6 +482,7 @@
 
     const bucketStats = computeBucketStats(data);
     const signalSeriesCache = {};
+    const entitySignalSeriesCache = {};
 
     return {
       getState() {
@@ -491,6 +503,23 @@
           signalSeriesCache[caseId] = buildSignalSeries(data, caseId, bucketStats);
         }
         return signalSeriesCache[caseId];
+      },
+      getSignalSeriesByEntity(entityId) {
+        if (entitySignalSeriesCache[entityId] !== undefined) {
+          return entitySignalSeriesCache[entityId];
+        }
+        const entity = indexById(data.entities || [])[entityId];
+        if (!entity) {
+          entitySignalSeriesCache[entityId] = null;
+          return null;
+        }
+        const series = buildSignalSeriesForEntity(data, entity, bucketStats);
+        if (series) {
+          const overlay = (data.flaggedCases || []).find((c) => c.entityId === entityId);
+          if (overlay) series.caseId = overlay.caseId;
+        }
+        entitySignalSeriesCache[entityId] = series;
+        return series;
       },
       getGraph() {
         return buildGraph(data);

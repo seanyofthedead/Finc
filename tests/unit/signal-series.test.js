@@ -196,3 +196,50 @@ describe("engine.getSignalSeries()", () => {
     expect(s.peerDeviation.values.every((v) => v === 0)).toBe(true);
   });
 });
+
+describe("engine.getSignalSeriesByEntity()", () => {
+  it("is exposed on the engine instance", () => {
+    const engine = window.FinCENEngine.buildEngine(buildTinyDataset());
+    expect(typeof engine.getSignalSeriesByEntity).toBe("function");
+  });
+
+  it("returns null for an unknown entityId", () => {
+    const engine = window.FinCENEngine.buildEngine(buildTinyDataset());
+    expect(engine.getSignalSeriesByEntity("E_DOES_NOT_EXIST")).toBeNull();
+  });
+
+  it("returns a valid series for a non-case entity (caseId=null)", () => {
+    const engine = window.FinCENEngine.buildEngine(buildTinyDataset());
+    const s = engine.getSignalSeriesByEntity("E3"); // E3 is NOT a case subject in the tiny dataset
+    expect(s).not.toBeNull();
+    expect(s.caseId).toBeNull();
+    expect(Array.isArray(s.velocity.values)).toBe(true);
+    expect(Array.isArray(s.peerDeviation.values)).toBe(true);
+    expect(typeof s.summary.txPerDay).toBe("number");
+    expect(Number.isFinite(s.summary.peerZ)).toBe(true);
+  });
+
+  it("returns series matching getSignalSeries for case subjects (E1 == CASE-001)", () => {
+    const engine = window.FinCENEngine.buildEngine(buildTinyDataset());
+    const byEntity = engine.getSignalSeriesByEntity("E1");
+    const byCase = engine.getSignalSeries("CASE-001");
+    expect(byEntity.velocity.values).toEqual(byCase.velocity.values);
+    expect(byEntity.peerDeviation.values).toEqual(byCase.peerDeviation.values);
+    expect(byEntity.summary.txPerDay).toBe(byCase.summary.txPerDay);
+    // caseId is resolved to the overlay when the entity is a case subject
+    expect(byEntity.caseId).toBe("CASE-001");
+  });
+
+  it("caches results by entityId (reference equality on repeat call)", () => {
+    const engine = window.FinCENEngine.buildEngine(buildTinyDataset());
+    const a = engine.getSignalSeriesByEntity("E3");
+    const b = engine.getSignalSeriesByEntity("E3");
+    expect(a).toBe(b);
+  });
+
+  it("existing getSignalSeries(caseId) contract is unchanged — caseId remains the input string", () => {
+    const engine = window.FinCENEngine.buildEngine(buildTinyDataset());
+    const s = engine.getSignalSeries("CASE-002");
+    expect(s.caseId).toBe("CASE-002");
+  });
+});
