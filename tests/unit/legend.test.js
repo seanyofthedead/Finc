@@ -44,7 +44,7 @@ describe("FinCENLegend", () => {
     expect(text).toMatch(/Medium risk/i);
     expect(text).toMatch(/High risk/i);
     // Thresholds surfaced to the user must match riskColor() in js/visualizations.js
-    expect(text).toContain("65");
+    expect(text).toContain("60");
     expect(text).toContain("85");
     // The three risk colors must appear somewhere in the rendered SVG payload.
     const html = legend.innerHTML;

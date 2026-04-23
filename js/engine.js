@@ -1,6 +1,16 @@
 (function () {
   "use strict";
 
+  // Canonical queue destination names — referenced by routeCase(), the queues
+  // object, routeCaseAction(), and app.js's empty-state copy map. Exposed on
+  // the engine export so UI code keys off the same strings.
+  const QUEUE_NAMES = {
+    INTELLIGENCE: "Intelligence Queue",
+    ENFORCEMENT: "Enforcement Referral",
+    ANALYST_REVIEW: "Analyst Review",
+    MONITORING: "Monitoring / Auto-close"
+  };
+
   function indexById(items) {
     const map = {};
     items.forEach((item) => {
@@ -107,15 +117,15 @@
 
   function routeCase(scoredCase, policy) {
     if (scoredCase.riskScore >= policy.highRiskThreshold && scoredCase.confidence >= policy.confidenceThreshold) {
-      return "Enforcement Referral";
+      return QUEUE_NAMES.ENFORCEMENT;
     }
     if (scoredCase.riskScore >= policy.highRiskThreshold && scoredCase.confidence < policy.confidenceThreshold) {
-      return "Intelligence Queue";
+      return QUEUE_NAMES.INTELLIGENCE;
     }
     if (scoredCase.riskScore >= policy.mediumRiskThreshold) {
-      return "Analyst Review";
+      return QUEUE_NAMES.ANALYST_REVIEW;
     }
-    return "Monitoring / Auto-close";
+    return QUEUE_NAMES.MONITORING;
   }
 
   function computeRouting(data, policy, typologyFilter) {
@@ -128,10 +138,10 @@
       });
 
     const queues = {
-      "Intelligence Queue": [],
-      "Enforcement Referral": [],
-      "Analyst Review": [],
-      "Monitoring / Auto-close": []
+      [QUEUE_NAMES.INTELLIGENCE]: [],
+      [QUEUE_NAMES.ENFORCEMENT]: [],
+      [QUEUE_NAMES.ANALYST_REVIEW]: [],
+      [QUEUE_NAMES.MONITORING]: []
     };
 
     results.forEach((r) => {
@@ -202,8 +212,20 @@
     return { nodes, edges };
   }
 
+  // buildHeatmap is deliberately NOT a 1:1 reflection of flaggedCases. It renders
+  // two layered signals in a single matrix:
+  //   1. An ambient baseline derived from transaction flow via typologyForTx()
+  //      below — a coarse heuristic (channel/amount/cross-border rules) that
+  //      exists only so the heatmap doesn't look empty outside the ~10 flagged
+  //      cases. These counts are then normalized into the 1–4 range so no
+  //      single cell dominates. This is not a classifier; do not treat its
+  //      output as case typology.
+  //   2. An overlay of +2 per actual flaggedCase at (entity.jurisdiction, case.typology).
+  // If you want the heatmap to strictly match flaggedCases, that is a product
+  // decision — not a bug — and needs a separate change that also addresses the
+  // sparse-matrix UX problem.
   function buildHeatmap(data) {
-    const typologies = ["Structuring", "TBML", "Sanctions Evasion", "Crypto Layering", "Unusual Velocity"];
+    const typologies = data.typologies.slice();
     const jurisdictions = Object.keys(data.jurisdictionRisk);
     const matrix = [];
     jurisdictions.forEach((j) => {
@@ -498,10 +520,10 @@
       },
       routeCaseAction(caseId, action, actor, note) {
         const destinationMap = {
-          escalate_intelligence: "Intelligence Queue",
-          refer_enforcement: "Enforcement Referral",
-          return_monitoring: "Monitoring / Auto-close",
-          close_case: "Monitoring / Auto-close"
+          escalate_intelligence: QUEUE_NAMES.INTELLIGENCE,
+          refer_enforcement: QUEUE_NAMES.ENFORCEMENT,
+          return_monitoring: QUEUE_NAMES.MONITORING,
+          close_case: QUEUE_NAMES.MONITORING
         };
         if (!destinationMap[action]) {
           return null;
@@ -530,6 +552,7 @@
   }
 
   window.FinCENEngine = {
-    buildEngine
+    buildEngine,
+    QUEUE_NAMES
   };
 })();

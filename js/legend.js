@@ -25,8 +25,8 @@
 
   // Risk-color key — mirrors riskColor() in js/visualizations.js.
   const riskSwatches = [
-    { svg: svg('<circle cx="0" cy="0" r="7" fill="#6ca678"/>'), label: "Low risk (score < 65)" },
-    { svg: svg('<circle cx="0" cy="0" r="7" fill="#ddb361"/>'), label: "Medium risk (65 – 84)" },
+    { svg: svg('<circle cx="0" cy="0" r="7" fill="#6ca678"/>'), label: "Low risk (score < 60)" },
+    { svg: svg('<circle cx="0" cy="0" r="7" fill="#ddb361"/>'), label: "Medium risk (60 – 84)" },
     { svg: svg('<circle cx="0" cy="0" r="7" fill="#e6695c"/>'), label: "High risk (\u2265 85)" }
   ];
 

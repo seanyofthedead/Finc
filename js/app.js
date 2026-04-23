@@ -97,7 +97,7 @@
     pendingAction: null
   };
 
-  const typologyList = ["All", "Structuring", "TBML", "Sanctions Evasion", "Crypto Layering", "Unusual Velocity"];
+  const typologyList = ["All"].concat(data.typologies);
 
   const coreCapabilities = [
     "Data Ingestion Framework",
@@ -161,7 +161,7 @@
     if (score >= 85) {
       return "risk-high";
     }
-    if (score >= 65) {
+    if (score >= 60) {
       return "risk-medium";
     }
     return "risk-low";
@@ -663,11 +663,12 @@
     });
 
     ui.routingBoard.innerHTML = "";
+    const Q = window.FinCENEngine.QUEUE_NAMES;
     const QUEUE_EMPTY_COPY = {
-      "Intelligence Queue":     { title: "No cases pending intelligence review.", body: "High-risk, low-confidence cases arrive here." },
-      "Enforcement Referral":   { title: "No active enforcement referrals.", body: "High-risk, high-confidence cases escalate here." },
-      "Analyst Review":         { title: "No cases awaiting analyst review.", body: "Medium-risk cases land here for human judgment." },
-      "Monitoring / Auto-close":{ title: "No cases in passive monitoring.", body: "Low-risk cases auto-close here." }
+      [Q.INTELLIGENCE]: { title: "No cases pending intelligence review.", body: "High-risk, low-confidence cases arrive here." },
+      [Q.ENFORCEMENT]:  { title: "No active enforcement referrals.", body: "High-risk, high-confidence cases escalate here." },
+      [Q.ANALYST_REVIEW]: { title: "No cases awaiting analyst review.", body: "Medium-risk cases land here for human judgment." },
+      [Q.MONITORING]:   { title: "No cases in passive monitoring.", body: "Low-risk cases auto-close here." }
     };
     Object.keys(queues).forEach((q) => {
       const col = document.createElement("div");
@@ -702,10 +703,10 @@
 
     const policy = engine.getState().policy;
     ui.decisionPath.innerHTML =
-      "<div>IF risk >= <strong>" + policy.highRiskThreshold + "</strong> AND confidence >= <strong>" + policy.confidenceThreshold + "</strong> -> Enforcement Referral</div>" +
-      "<div>IF risk >= <strong>" + policy.highRiskThreshold + "</strong> AND confidence &lt; <strong>" + policy.confidenceThreshold + "</strong> -> Intelligence Queue</div>" +
-      "<div>IF risk >= <strong>" + policy.mediumRiskThreshold + "</strong> -> Analyst Review</div>" +
-      "<div>ELSE -> Monitoring / Auto-close</div>" +
+      "<div>IF risk >= <strong>" + policy.highRiskThreshold + "</strong> AND confidence >= <strong>" + policy.confidenceThreshold + "</strong> -> " + Q.ENFORCEMENT + "</div>" +
+      "<div>IF risk >= <strong>" + policy.highRiskThreshold + "</strong> AND confidence &lt; <strong>" + policy.confidenceThreshold + "</strong> -> " + Q.INTELLIGENCE + "</div>" +
+      "<div>IF risk >= <strong>" + policy.mediumRiskThreshold + "</strong> -> " + Q.ANALYST_REVIEW + "</div>" +
+      "<div>ELSE -> " + Q.MONITORING + "</div>" +
       "<div class='muted' style='margin-top:8px'>Jurisdiction weight modifier: " + policy.jurisdictionWeight.toFixed(1) + "</div>";
 
     window.FinCENViz.drawScatter(ui.triageScatterCanvas, routing.results, policy);
@@ -720,15 +721,16 @@
       triageTab.textContent = "Risk Scoring & Triage (" + routing.results.length + ")";
     }
     if (workspaceTab) {
-      workspaceTab.textContent = "Analyst Workspace (" + routing.queues["Analyst Review"].length + ")";
+      workspaceTab.textContent = "Analyst Workspace (" + routing.queues[window.FinCENEngine.QUEUE_NAMES.ANALYST_REVIEW].length + ")";
     }
   }
 
   function renderKPIStrip(precomputedRouting) {
     const routing = precomputedRouting || engine.getRouting();
     const total = routing.results.length;
-    const enforcement = routing.queues["Enforcement Referral"].length;
-    const intelligence = routing.queues["Intelligence Queue"].length;
+    const QN = window.FinCENEngine.QUEUE_NAMES;
+    const enforcement = routing.queues[QN.ENFORCEMENT].length;
+    const intelligence = routing.queues[QN.INTELLIGENCE].length;
     const avg = total ? (routing.results.reduce((sum, x) => sum + x.riskScore, 0) / total) : 0;
     const anim = window.FinCENMotion && window.FinCENMotion.animateDigits;
     const write = (el, val, opts) => {

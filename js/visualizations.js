@@ -18,7 +18,7 @@
 
   function riskColor(score) {
     if (score >= 85) return PALETTE.high;
-    if (score >= 65) return PALETTE.medium;
+    if (score >= 60) return PALETTE.medium;
     return PALETTE.low;
   }
 

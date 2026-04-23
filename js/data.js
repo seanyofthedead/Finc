@@ -256,6 +256,16 @@
     Israel: 0.35
   };
 
+  // Canonical typology list — single source for filter dropdowns, heatmap columns,
+  // and severity weights. Order here is the order consumers should render.
+  const typologies = [
+    "Structuring",
+    "TBML",
+    "Sanctions Evasion",
+    "Crypto Layering",
+    "Unusual Velocity"
+  ];
+
   const typologySeverity = {
     Structuring: 1.00,
     TBML: 1.07,
@@ -2230,8 +2240,12 @@
       { sourceId: "SAR-9074", observedName: "Castoria Trust", matchedEntityId: "E0018", confidence: 0.94 },
       { sourceId: "SAR-9111", observedName: "Ravena S.A.", matchedEntityId: "E0023", confidence: 0.97 }
     ],
-    beforeEntityCount: 216,
-    afterEntityCount: 212
+    // beforeEntityCount = canonical count + duplicateProfiles.length (duplicates
+    // arrived from SAR filings and were merged into the canonical entities above).
+    // afterEntityCount derives from the entities array so it never drifts if the
+    // dataset is regenerated.
+    beforeEntityCount: entities.length + 4,
+    afterEntityCount: entities.length
   };
 
   const flaggedCases = [
@@ -2589,6 +2603,7 @@
     ingestionSources,
     entityResolution,
     jurisdictionRisk,
+    typologies,
     typologySeverity
   };
 
