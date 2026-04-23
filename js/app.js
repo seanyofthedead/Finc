@@ -57,6 +57,7 @@
     routingBoard: document.getElementById("routing-board"),
     triageScatterCanvas: document.getElementById("triage-scatter-canvas"),
 
+    workspaceCaseSearch: document.getElementById("workspace-case-search"),
     workspaceCaseSelect: document.getElementById("workspace-case-select"),
     evidenceGrid: document.getElementById("evidence-grid"),
     overrideScore: document.getElementById("override-score"),
@@ -98,6 +99,7 @@
     selectedFeatureEntity: null,
     signalSearch: "",
     signalSort: { column: null, direction: null },
+    workspaceSearch: "",
     selectedWorkspaceCase: null,
     selectedModule: null,
     guideIndex: -1,
@@ -874,15 +876,45 @@
 
   function renderWorkspace() {
     const allCases = engine.getRouting().results;
+    const entityById = (function () {
+      const idx = {};
+      data.entities.forEach((e) => { idx[e.id] = e; });
+      return idx;
+    })();
+    const q = (appState.workspaceSearch || "").toLowerCase();
+    const matches = (c) => {
+      if (!q) return true;
+      const entity = entityById[c.entityId];
+      const entityName = entity ? entity.name : "";
+      return c.caseId.toLowerCase().indexOf(q) !== -1
+        || c.typology.toLowerCase().indexOf(q) !== -1
+        || entityName.toLowerCase().indexOf(q) !== -1
+        || (c.entityId || "").toLowerCase().indexOf(q) !== -1;
+    };
+    const filtered = allCases.filter(matches);
     ui.workspaceCaseSelect.innerHTML = "";
-    allCases.forEach((c) => {
+    filtered.forEach((c) => {
+      const entity = entityById[c.entityId];
+      const entityName = entity ? entity.name : c.entityId;
       const opt = document.createElement("option");
       opt.value = c.caseId;
-      opt.textContent = c.caseId + " - " + c.typology + " (" + c.destination + ")";
+      opt.textContent = c.caseId + " - " + entityName + " - " + c.typology + " (" + c.destination + ")";
       ui.workspaceCaseSelect.appendChild(opt);
     });
-    appState.selectedWorkspaceCase = appState.selectedWorkspaceCase || allCases[0].caseId;
-    ui.workspaceCaseSelect.value = appState.selectedWorkspaceCase;
+    if (filtered.length === 0) {
+      // Keep the select empty and surface a placeholder; selection stays on
+      // whatever it was so the user can clear search to restore context.
+      const opt = document.createElement("option");
+      opt.disabled = true;
+      opt.textContent = "No cases match '" + (appState.workspaceSearch || "") + "'";
+      ui.workspaceCaseSelect.appendChild(opt);
+    } else {
+      const stillVisible = filtered.some((c) => c.caseId === appState.selectedWorkspaceCase);
+      if (!stillVisible) {
+        appState.selectedWorkspaceCase = filtered[0].caseId;
+      }
+      ui.workspaceCaseSelect.value = appState.selectedWorkspaceCase;
+    }
     renderWorkspaceCase();
     renderAudit();
     renderBiasIndicator();
@@ -956,6 +988,13 @@
       appState.selectedWorkspaceCase = ui.workspaceCaseSelect.value;
       renderWorkspaceCase();
     });
+
+    if (ui.workspaceCaseSearch) {
+      ui.workspaceCaseSearch.addEventListener("input", (ev) => {
+        appState.workspaceSearch = ev.target.value || "";
+        renderWorkspace();
+      });
+    }
 
     ui.applyOverrideBtn.addEventListener("click", () => {
       engine.applyOverride(
