@@ -1,7 +1,7 @@
 ---
 title: "feat: Expand Derived Signal Table to all ER-graph entities"
 type: feat
-status: active
+status: completed
 date: 2026-04-22
 revised: 2026-04-22
 execution: test-first
