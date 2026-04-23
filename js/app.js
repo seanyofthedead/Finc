@@ -686,6 +686,10 @@
         analyticsGraphCache.hasPath = false;
         renderAnalytics();
         renderRouting();
+        // Signal table mirrors the ER-graph population; narrow it in lockstep.
+        // Reset scroll to top so the user sees the new default-sort head.
+        renderSignalEngineering();
+        if (ui.signalTableWrapper) ui.signalTableWrapper.scrollTop = 0;
       });
       ui.typologyFilterGroup.appendChild(b);
     });
@@ -1190,6 +1194,10 @@
         icon: "triage",
         action: () => {
           engine.setTypologyFilter(t);
+          // Render Signal table BEFORE navigation so it is warm if the user
+          // later returns to that tab.
+          renderSignalEngineering();
+          if (ui.signalTableWrapper) ui.signalTableWrapper.scrollTop = 0;
           setScreen("screen-analytics");
           renderAnalytics();
           renderRouting();
