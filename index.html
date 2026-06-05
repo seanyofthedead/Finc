@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>FinCEN Signal-to-Decision Enterprise Analytics Platform</title>
+    <title>OCC BSA/AML Supervisory Risk Sensing Micro-Pilot</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,300..900,0..100&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
@@ -13,14 +13,14 @@
     <div class="app-header">
       <div class="classification-strip" aria-hidden="true">
         <span>UNCLASSIFIED // FOR DEMONSTRATION</span>
-        <span>FINCEN — ENTERPRISE ANALYTICS PLATFORM</span>
+        <span>OCC BSA/AML MICRO-PILOT — EXECUTIVE DEMO</span>
         <span>UNCLASSIFIED // FOR DEMONSTRATION</span>
       </div>
       <header class="topbar">
         <div class="title-group">
-          <p class="eyebrow"><span class="eyebrow-num">File 01 ·</span> Signal-to-Decision Platform</p>
-          <h1 class="display-title"><span>Signal</span><span class="arrow" aria-hidden="true">→</span><span>Decision</span></h1>
-          <p class="subtitle"><em>Ingestion</em>  /  <em>Detection</em>  /  <em>Routing</em>  /  <em>Analyst Decision</em>  /  <em>Governed Audit</em></p>
+          <p class="eyebrow">FFIEC-Aligned BSA/AML Supervisory Micro-Pilot</p>
+          <h1 class="display-title"><span>Risk</span><span class="arrow" aria-hidden="true">→</span><span>Evidence</span></h1>
+          <p class="subtitle"><em>Bank Data Ingestion</em>  /  <em>SAR/CTR Validation</em>  /  <em>Examiner Testing</em>  /  <em>Supervisory Decision</em>  /  <em>Governed Audit</em></p>
         </div>
         <div class="topbar-actions">
           <div class="status-chip" aria-live="polite">
@@ -39,27 +39,27 @@
       <nav class="tab-nav" id="tab-nav">
         <button class="tab-btn active" data-screen="screen-pipeline"><span class="tab-icon" data-icon="pipeline"></span><span>Data Pipeline</span></button>
         <button class="tab-btn" data-screen="screen-signals"><span class="tab-icon" data-icon="signals"></span><span>Signal Engineering</span></button>
-        <button class="tab-btn" data-screen="screen-analytics"><span class="tab-icon" data-icon="analytics"></span><span>Analytics &amp; Detection</span></button>
-        <button class="tab-btn" data-screen="screen-triage"><span class="tab-icon" data-icon="triage"></span><span>Risk Scoring &amp; Triage</span></button>
-        <button class="tab-btn" data-screen="screen-workspace"><span class="tab-icon" data-icon="workspace"></span><span>Analyst Workspace</span></button>
+        <button class="tab-btn" data-screen="screen-analytics"><span class="tab-icon" data-icon="analytics"></span><span>Transaction Testing</span></button>
+        <button class="tab-btn" data-screen="screen-triage"><span class="tab-icon" data-icon="triage"></span><span>Supervisory Prioritization</span></button>
+        <button class="tab-btn" data-screen="screen-workspace"><span class="tab-icon" data-icon="workspace"></span><span>Examiner Workspace</span></button>
         <button class="tab-btn" data-screen="screen-enterprise"><span class="tab-icon" data-icon="enterprise"></span><span>Enterprise Deployment</span></button>
       </nav>
 
       <div class="kpi-strip">
         <div class="kpi-item"><span class="kpi-value" id="kpi-total-entities">&mdash;</span><span class="kpi-label">Total Entities</span></div>
-        <div class="kpi-item"><span class="kpi-value" id="kpi-total-cases">&mdash;</span><span class="kpi-label">Total Cases</span></div>
-        <div class="kpi-item"><span class="kpi-value" id="kpi-enforcement">&mdash;</span><span class="kpi-label">Enforcement Referrals</span></div>
-        <div class="kpi-item"><span class="kpi-value" id="kpi-intelligence">&mdash;</span><span class="kpi-label">Intelligence Queue</span></div>
-        <div class="kpi-item"><span class="kpi-value" id="kpi-average-risk">&mdash;</span><span class="kpi-label">Average Risk</span></div>
-        <div class="kpi-item"><span class="kpi-value" id="kpi-bias">&mdash;</span><span class="kpi-label">Bias Status</span></div>
+        <div class="kpi-item"><span class="kpi-value" id="kpi-total-cases">&mdash;</span><span class="kpi-label">Exam Exceptions</span></div>
+        <div class="kpi-item"><span class="kpi-value" id="kpi-enforcement">&mdash;</span><span class="kpi-label">Supervisory Escalations</span></div>
+        <div class="kpi-item"><span class="kpi-value" id="kpi-intelligence">&mdash;</span><span class="kpi-label">Additional Review</span></div>
+        <div class="kpi-item"><span class="kpi-value" id="kpi-average-risk">&mdash;</span><span class="kpi-label">Avg Supervisory Risk</span></div>
+        <div class="kpi-item"><span class="kpi-value" id="kpi-bias">&mdash;</span><span class="kpi-label">Review Balance</span></div>
       </div>
 
       <main>
         <section class="screen active" id="screen-pipeline">
           <header class="section-masthead">
             <p class="kicker mono"><span class="kicker-num">01</span> <span class="kicker-rule"></span> Pipeline</p>
-            <h2 class="display-head">Ingestion, fused into an intelligence graph.</h2>
-            <p class="section-lede">Six heterogeneous datasets — CTRs, SARs, sanctions, crypto ledgers, bank metadata, cross-border wires — normalized, resolved to canonical entities, and published to a governed graph with lineage and freshness controls.</p>
+            <h2 class="display-head">Bank source data, traced to FinCEN-reportable outputs.</h2>
+            <p class="section-lede">Six examination-relevant feeds — SARs, CTRs, customer/account records, digital asset activity, bank metadata, and funds transfers — normalized, resolved to canonical entities, and published to a governed evidence graph with lineage and freshness controls.</p>
           </header>
 
           <div class="layout-grid pipeline-grid">
@@ -132,7 +132,7 @@
               </div>
               <div class="card">
                 <header class="card-head">
-                  <p class="kicker mono"><span class="kicker-num">1.5</span> Source Lineage</p>
+                  <p class="kicker mono"><span class="kicker-num">1.5</span> FinCEN Reporting Lineage</p>
                   <p class="card-dek">Hover a source to inspect provenance</p>
                 </header>
                 <div id="lineage-panel" class="lineage-panel">
@@ -148,7 +148,7 @@
           <header class="section-masthead">
             <p class="kicker mono"><span class="kicker-num">02</span> <span class="kicker-rule"></span> Signal Engineering</p>
             <h2 class="display-head">Raw events, distilled into explainable features.</h2>
-            <p class="section-lede">Transaction velocity, jurisdictional exposure, beneficial-ownership depth, peer-group deviation, cross-border flagging — derived per-entity for every node in the intelligence graph, with flagged-case subjects highlighted and audit-trailed back to raw evidence.</p>
+            <p class="section-lede">Transaction velocity, jurisdictional exposure, beneficial-ownership depth, peer-group deviation, and cross-border flags are converted into examiner-aligned indicators, with review subjects audit-trailed back to source data and SAR/CTR reporting evidence.</p>
           </header>
           <div class="layout-grid cols-2 signals-grid">
             <div class="card">
@@ -216,16 +216,16 @@
 
         <section class="screen" id="screen-analytics">
           <header class="section-masthead">
-            <p class="kicker mono"><span class="kicker-num">03</span> <span class="kicker-rule"></span> Analytics &amp; Detection</p>
-            <h2 class="display-head">Network anomalies, made legible.</h2>
-            <p class="section-lede">The intelligence graph compresses heterogeneous activity into patterns an analyst can read in seconds — shell-company chains, crypto-mixing structures, disposable-wallet clusters — each with transparent rationale.</p>
+            <p class="kicker mono"><span class="kicker-num">03</span> <span class="kicker-rule"></span> Transaction Testing</p>
+            <h2 class="display-head">Examiner testing patterns, made legible.</h2>
+            <p class="section-lede">The evidence graph compresses heterogeneous bank activity into patterns an examiner can review quickly — complex ownership chains, digital asset exposure, incomplete counterparty information, and SAR/CTR reporting exceptions — each with transparent rationale.</p>
           </header>
           <div class="layout-grid cols-2">
             <div class="card is-raised">
               <h3>Entity Relationship Network</h3>
               <canvas class="graph-canvas" id="analytics-graph-canvas"></canvas>
               <div id="analytics-legend-host"></div>
-              <p class="graph-hint muted">Click a node for details. Shift+click a second node to trace the shortest fund-flow path. Drag to move. Wheel or +/- to zoom. 0 to reset.</p>
+              <p class="graph-hint muted">Click a node for details. Shift+click a second node to trace the shortest transaction path. Drag to move. Wheel or +/- to zoom. 0 to reset.</p>
             </div>
             <div class="card">
               <h3>Anomaly Heatmap</h3>
@@ -235,18 +235,26 @@
 
           <div class="card" style="margin-top: 16px">
             <div class="metric-row">
-              <h3 style="margin: 0">Flagged Case Patterns</h3>
+              <h3 style="margin: 0">FFIEC Transaction Testing Presets</h3>
+              <span class="muted">Examiner-configurable sample views</span>
+            </div>
+            <div class="testing-presets" id="testing-presets"></div>
+          </div>
+
+          <div class="card" style="margin-top: 16px">
+            <div class="metric-row">
+              <h3 style="margin: 0">Examiner Testing Patterns</h3>
               <div id="typology-filter-group"></div>
             </div>
             <div class="signal-controls">
-              <input type="search" id="case-cards-search" class="signal-search" placeholder="Search by case ID, entity, or typology..." aria-label="Search flagged case cards" autocomplete="off" />
-              <select id="case-cards-sort" class="signal-search" aria-label="Sort flagged case cards" style="flex: 0 0 auto; max-width: 220px">
+              <input type="search" id="case-cards-search" class="signal-search" placeholder="Search by exception ID, entity, or testing pattern..." aria-label="Search examiner testing pattern cards" autocomplete="off" />
+              <select id="case-cards-sort" class="signal-search" aria-label="Sort examiner testing pattern cards" style="flex: 0 0 auto; max-width: 220px">
                 <option value="risk-desc">Risk (high &rarr; low)</option>
                 <option value="risk-asc">Risk (low &rarr; high)</option>
                 <option value="confidence-desc">Confidence (high &rarr; low)</option>
                 <option value="confidence-asc">Confidence (low &rarr; high)</option>
-                <option value="typology-asc">Typology (A&rarr;Z)</option>
-                <option value="caseId-asc">Case ID</option>
+                <option value="typology-asc">Testing Pattern (A&rarr;Z)</option>
+                <option value="caseId-asc">Exception ID</option>
               </select>
               <span class="signal-result-count mono" id="case-cards-result-count"></span>
             </div>
@@ -257,9 +265,9 @@
 
         <section class="screen" id="screen-triage">
           <header class="section-masthead">
-            <p class="kicker mono"><span class="kicker-num">04</span> <span class="kicker-rule"></span> Risk Scoring &amp; Triage</p>
-            <h2 class="display-head">Policy thresholds govern every route.</h2>
-            <p class="section-lede">Deterministic rules route each case toward enforcement, intelligence, human review, or monitored closure. Thresholds are adjustable in real time; the rationale is recorded with every case that moves.</p>
+            <p class="kicker mono"><span class="kicker-num">04</span> <span class="kicker-rule"></span> Supervisory Prioritization</p>
+            <h2 class="display-head">Examiner thresholds govern every review path.</h2>
+            <p class="section-lede">Deterministic rules route each exception toward supervisory escalation, additional review, examiner review, or monitored closure. Thresholds are adjustable in real time; the rationale is recorded with every review action.</p>
           </header>
           <div class="card">
             <h3>Policy Threshold Controls</h3>
@@ -280,18 +288,18 @@
           </div>
 
           <div class="card" style="margin-top: 16px">
-            <h3>Automated Decision Path</h3>
+            <h3>Examiner Decision Path</h3>
             <div class="decision-path" id="decision-path"></div>
           </div>
 
           <div class="card" style="margin-top: 16px">
-            <h3>Risk vs Confidence Decision Space</h3>
+            <h3>Risk vs Confidence Review Space</h3>
             <canvas class="mini-canvas" id="triage-scatter-canvas"></canvas>
           </div>
 
           <div class="card" style="margin-top: 16px">
             <div class="signal-controls">
-              <input type="search" id="routing-search" class="signal-search" placeholder="Search cases in queues by ID, entity, or typology..." aria-label="Search routing board" autocomplete="off" />
+              <input type="search" id="routing-search" class="signal-search" placeholder="Search exceptions in queues by ID, entity, or testing pattern..." aria-label="Search routing board" autocomplete="off" />
               <span class="signal-result-count mono" id="routing-result-count"></span>
             </div>
             <div class="routing-board" id="routing-board"></div>
@@ -300,17 +308,17 @@
 
         <section class="screen" id="screen-workspace">
           <header class="section-masthead">
-            <p class="kicker mono"><span class="kicker-num">05</span> <span class="kicker-rule"></span> Analyst Workspace</p>
+            <p class="kicker mono"><span class="kicker-num">05</span> <span class="kicker-rule"></span> Examiner Workspace</p>
             <h2 class="display-head">Evidence in, decision out, audit always on.</h2>
-            <p class="section-lede">Entity profile, model explanation, transaction evidence, governed override — the analyst surface where a human judgment becomes a defensible, timestamped record.</p>
+            <p class="section-lede">Entity profile, model explanation, transaction evidence, governed override, and reporting-lineage checks — the examiner surface where a supervisory judgment becomes a defensible, timestamped record.</p>
           </header>
           <div class="workspace-layout">
             <div class="card">
-              <h3>Analyst Review Workspace</h3>
-              <label for="workspace-case-search">Find case</label>
-              <input type="search" id="workspace-case-search" class="signal-search" placeholder="Filter by case ID, entity, or typology..." aria-label="Filter workspace cases" autocomplete="off" />
+              <h3>Examiner Evidence Workspace</h3>
+              <label for="workspace-case-search">Find exception</label>
+              <input type="search" id="workspace-case-search" class="signal-search" placeholder="Filter by exception ID, entity, or testing pattern..." aria-label="Filter workspace exceptions" autocomplete="off" />
               <div class="spacer-sm"></div>
-              <label for="workspace-case-select">Case</label>
+              <label for="workspace-case-select">Exception</label>
               <select id="workspace-case-select"></select>
               <div class="spacer-sm"></div>
               <div class="evidence-grid" id="evidence-grid"></div>
@@ -319,7 +327,7 @@
               <input id="override-score" type="number" min="0" max="100" />
               <div class="spacer-sm"></div>
               <label for="override-rationale">Rationale</label>
-              <textarea id="override-rationale" rows="3" placeholder="Provide analyst rationale..."></textarea>
+              <textarea id="override-rationale" rows="3" placeholder="Provide examiner rationale..."></textarea>
               <div class="spacer-sm"></div>
               <button class="btn accent" id="apply-override-btn">Apply Override</button>
               <div class="spacer-sm"></div>
@@ -334,10 +342,10 @@
               </div>
               <div class="spacer-sm"></div>
               <div class="action-buttons">
-                <button class="btn" data-action="escalate_intelligence">Escalate to Intelligence</button>
-                <button class="btn" data-action="refer_enforcement">Refer to Enforcement</button>
+                <button class="btn" data-action="escalate_intelligence">Request Additional Review</button>
+                <button class="btn" data-action="refer_enforcement">Supervisory Escalation</button>
                 <button class="btn" data-action="return_monitoring">Return to Monitoring</button>
-                <button class="btn" data-action="close_case">Close Case</button>
+                <button class="btn" data-action="close_case">Close No Finding</button>
               </div>
             </div>
 
@@ -345,13 +353,13 @@
               <div class="card">
                 <h3>Governance Controls</h3>
                 <div class="metric-row"><span class="muted">Model Version</span><span id="workspace-model-version">v3.2.4</span></div>
-                <div class="metric-row"><span class="muted">Bias Monitor</span><span id="bias-indicator" class="pill risk-low">Green</span></div>
+                <div class="metric-row"><span class="muted">Review Balance</span><span id="bias-indicator" class="pill risk-medium">Sample Limited</span></div>
                 <div id="bias-detail" class="bias-detail"></div>
                 <div class="metric-row"><span class="muted">Validation</span><span class="pill risk-low">Current</span></div>
                 <ul class="gov-list">
                   <li><input type="checkbox" checked /> Evidence reviewed</li>
                   <li><input type="checkbox" checked /> Model explanation reviewed</li>
-                  <li><input type="checkbox" /> Policy exception documented</li>
+                  <li><input type="checkbox" /> BSA/AML exception documented</li>
                   <li><input type="checkbox" /> Supervisory notification completed</li>
                 </ul>
               </div>
@@ -367,12 +375,12 @@
         <section class="screen" id="screen-enterprise">
           <header class="section-masthead">
             <p class="kicker mono"><span class="kicker-num">06</span> <span class="kicker-rule"></span> Enterprise Deployment</p>
-            <h2 class="display-head">One backbone. Many missions.</h2>
-            <p class="section-lede">Ingestion, feature engineering, analytics, scoring, governance, lifecycle — shared infrastructure that every mission module inherits. Plug in a typology pack; keep the platform.</p>
+            <h2 class="display-head">One backbone. Many supervisory lenses.</h2>
+            <p class="section-lede">Ingestion, feature engineering, examiner testing, scoring, governance, lifecycle — shared infrastructure that each FFIEC-aligned supervisory module inherits. Configure the exam lens; keep the platform.</p>
           </header>
           <div class="card">
             <h3>Enterprise Deployment &amp; Modular Expansion</h3>
-            <p class="muted">Select a mission module to see which enterprise capabilities it leverages.</p>
+            <p class="muted">Select a supervisory module to see which enterprise capabilities it leverages.</p>
             <div class="module-layout">
               <div class="module-column" id="core-capabilities"></div>
               <svg class="connector-svg" id="module-connectors"></svg>

@@ -682,9 +682,9 @@
     ctx.fillStyle = "#8a9aaa";
     ctx.font = "10px 'IBM Plex Mono', ui-monospace, monospace";
     ctx.fillText("Monitoring", pad.l + 4, pad.t + h - 6);
-    ctx.fillText("Analyst Review", xThreshold + 6, pad.t + h - 6);
-    ctx.fillText("Intelligence", xThreshold + 6, yThreshold - 8);
-    ctx.fillText("Enforcement", pad.l + w - 68, pad.t + 12);
+    ctx.fillText("Exam Review", xThreshold + 6, pad.t + h - 6);
+    ctx.fillText("Add'l Review", xThreshold + 6, yThreshold - 8);
+    ctx.fillText("Escalation", pad.l + w - 68, pad.t + 12);
     ctx.fillText("Risk →", pad.l + w - 36, rect.height - 10);
     ctx.save();
     ctx.translate(10, pad.t + h / 2);

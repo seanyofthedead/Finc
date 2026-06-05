@@ -35,7 +35,7 @@
         <ul data-role="tx-list" class="entity-tx-list"></ul>
       </div>
       <footer class="entity-panel-foot">
-        <button class="btn accent" data-action="open-workspace">Open in Analyst Workspace</button>
+        <button class="btn accent" data-action="open-workspace">Open in Examiner Workspace</button>
       </footer>
     `;
     container.appendChild(root);
@@ -68,7 +68,7 @@
     const caseSlot = root.querySelector('[data-role="case-slot"]');
     if (opts.case && (opts.case.typology || opts.case.whyFlagged)) {
       caseSlot.innerHTML =
-        '<div class="metric-row"><span class="muted">Typology</span><span>' + escape(opts.case.typology || "") + "</span></div>" +
+        '<div class="metric-row"><span class="muted">Testing Pattern</span><span>' + escape(opts.case.typology || "") + "</span></div>" +
         (opts.case.whyFlagged ? '<div class="entity-panel-why muted">' + escape(opts.case.whyFlagged) + "</div>" : "");
     } else {
       caseSlot.innerHTML = "";

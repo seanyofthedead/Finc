@@ -51,7 +51,7 @@ function logNormal(mu, sigma) {
 }
 
 // ---------------------------------------------------------------------------
-// Enums — must match values the app hard-codes. See AML_DATASET_PLAN.md.
+// Enums must match values the app hard-codes.
 // ---------------------------------------------------------------------------
 const KIND = {
   INDIVIDUAL: "individual",
@@ -1176,7 +1176,7 @@ function buildDataFile(bundle) {
   lines.push(" * Patterns are generalised from publicly-available court filings and");
   lines.push(" * journalism on Paul Le Roux's RX Limited network and Ross Ulbricht's");
   lines.push(" * Silk Road marketplace.  SYNTHETIC DATA — FOR TRAINING / DEMO ONLY.");
-  lines.push(" * See AML_DATASET_PLAN.md and README_DATASET.md for full details.");
+  lines.push(" * See data/README_DATASET.md for full details.");
   lines.push(" */");
   lines.push("(function () {");
   lines.push("  \"use strict\";");

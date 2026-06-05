@@ -105,7 +105,7 @@ describe("deriveFeatures extended to all entities (two-track formulas)", () => {
     const row = engine.getDerivedFeatures().find((f) => f.caseId === "CASE-2001");
     expect(row.entityId).toBe("E0147");
     expect(row._caseEnriched).toBe(true);
-    expect(row.derived.transactionVelocityScore).toBe(59.9);
+    expect(row.derived.transactionVelocityScore).toBe(56.5);
   });
 });
 

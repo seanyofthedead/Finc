@@ -4,7 +4,7 @@
  * Patterns are generalised from publicly-available court filings and
  * journalism on Paul Le Roux's RX Limited network and Ross Ulbricht's
  * Silk Road marketplace.  SYNTHETIC DATA — FOR TRAINING / DEMO ONLY.
- * See AML_DATASET_PLAN.md and README_DATASET.md for full details.
+ * See data/README_DATASET.md for full details.
  */
 (function () {
   "use strict";
@@ -225,12 +225,12 @@
   ];
 
   const ingestionSources = [
-    { id: "SRC_SAR", label: "SAR Filings", mode: "Batch", records: 1834, freshnessMinutes: 22, lineage: "BSA eFiling -> XML parser -> normalized_sar" },
-    { id: "SRC_CTR", label: "CTR Filings", mode: "Batch", records: 4281, freshnessMinutes: 40, lineage: "CTR ingest -> schema harmonizer -> normalized_ctr" },
-    { id: "SRC_SAN", label: "Sanctions List", mode: "Batch", records: 719, freshnessMinutes: 95, lineage: "Consolidated sanctions -> alias resolver -> sanctions_master" },
-    { id: "SRC_CRYPTO", label: "Crypto Transactions", mode: "Streaming", records: 6822, freshnessMinutes: 3, lineage: "Node listener -> wallet resolver -> crypto_ledger" },
-    { id: "SRC_BANK", label: "Bank Metadata", mode: "Batch", records: 1164, freshnessMinutes: 144, lineage: "FI profiles -> entity linker -> bank_reference" },
-    { id: "SRC_XBORDER", label: "Cross-Border Records", mode: "Streaming", records: 2655, freshnessMinutes: 6, lineage: "SWIFT monitor -> geo enricher -> xborder_events" }
+    { id: "SRC_SAR", label: "SAR Reporting Feed", mode: "Batch", records: 1834, freshnessMinutes: 22, lineage: "BSA eFiling -> SAR schema review -> normalized_sar" },
+    { id: "SRC_CTR", label: "CTR Reporting Feed", mode: "Batch", records: 4281, freshnessMinutes: 40, lineage: "CTR ingest -> threshold and exemption checks -> normalized_ctr" },
+    { id: "SRC_SAN", label: "OFAC/BSA Reference Data", mode: "Batch", records: 719, freshnessMinutes: 95, lineage: "Reference lists -> alias resolver -> bsa_reference_master" },
+    { id: "SRC_CRYPTO", label: "Digital Asset Activity", mode: "Streaming", records: 6822, freshnessMinutes: 3, lineage: "Digital asset feed -> wallet/entity resolver -> digital_asset_events" },
+    { id: "SRC_BANK", label: "Bank Customer & Account Data", mode: "Batch", records: 1164, freshnessMinutes: 144, lineage: "Core banking records -> entity linker -> customer_account_reference" },
+    { id: "SRC_XBORDER", label: "Funds Transfer Records", mode: "Streaming", records: 2655, freshnessMinutes: 6, lineage: "Wire monitor -> originator/beneficiary enrichment -> funds_transfer_events" }
   ];
 
   const sanctionsList = [
@@ -2253,9 +2253,9 @@
       "caseId": "CASE-2001",
       "entityId": "E0147",
       "typology": "Sanctions Evasion",
-      "riskScore": 84,
+      "riskScore": 72,
       "confidence": 73,
-      "jurisdictionRelevance": 89,
+      "jurisdictionRelevance": 60,
       "contributingFeatures": [
         "Shell-company chain of depth 3",
         "Structured sub-$10k ACH deposits clustered same-day",
@@ -2287,9 +2287,9 @@
       "caseId": "CASE-2002",
       "entityId": "E0153",
       "typology": "TBML",
-      "riskScore": 90,
+      "riskScore": 78,
       "confidence": 83,
-      "jurisdictionRelevance": 89,
+      "jurisdictionRelevance": 55,
       "contributingFeatures": [
         "Shell-company chain of depth 5",
         "Structured sub-$10k ACH deposits clustered same-day",
@@ -2321,9 +2321,9 @@
       "caseId": "CASE-2003",
       "entityId": "E0158",
       "typology": "Sanctions Evasion",
-      "riskScore": 93,
+      "riskScore": 67,
       "confidence": 75,
-      "jurisdictionRelevance": 89,
+      "jurisdictionRelevance": 50,
       "contributingFeatures": [
         "Shell-company chain of depth 4",
         "Structured sub-$10k ACH deposits clustered same-day",
@@ -2355,9 +2355,9 @@
       "caseId": "CASE-2004",
       "entityId": "E0163",
       "typology": "TBML",
-      "riskScore": 92,
+      "riskScore": 72,
       "confidence": 77,
-      "jurisdictionRelevance": 89,
+      "jurisdictionRelevance": 45,
       "contributingFeatures": [
         "Shell-company chain of depth 4",
         "Structured sub-$10k ACH deposits clustered same-day",
@@ -2389,9 +2389,9 @@
       "caseId": "CASE-2005",
       "entityId": "E0167",
       "typology": "Sanctions Evasion",
-      "riskScore": 87,
+      "riskScore": 60,
       "confidence": 75,
-      "jurisdictionRelevance": 87,
+      "jurisdictionRelevance": 40,
       "contributingFeatures": [
         "Shell-company chain of depth 3",
         "Structured sub-$10k ACH deposits clustered same-day",
@@ -2423,9 +2423,9 @@
       "caseId": "CASE-2006",
       "entityId": "E0186",
       "typology": "Crypto Layering",
-      "riskScore": 88,
+      "riskScore": 73,
       "confidence": 81,
-      "jurisdictionRelevance": 78,
+      "jurisdictionRelevance": 55,
       "contributingFeatures": [
         "Retail-scale crypto inflows to single vendor wallet",
         "Right-skewed amounts $20–$800",
@@ -2457,9 +2457,9 @@
       "caseId": "CASE-2007",
       "entityId": "E0187",
       "typology": "Crypto Layering",
-      "riskScore": 83,
+      "riskScore": 66,
       "confidence": 70,
-      "jurisdictionRelevance": 71,
+      "jurisdictionRelevance": 45,
       "contributingFeatures": [
         "~10% skim from vendor wallet to operator-controlled cluster",
         "Multiple operator wallets receiving proportional shares",
@@ -2489,9 +2489,9 @@
       "caseId": "CASE-2008",
       "entityId": "E0169",
       "typology": "Crypto Layering",
-      "riskScore": 81,
+      "riskScore": 61,
       "confidence": 81,
-      "jurisdictionRelevance": 78,
+      "jurisdictionRelevance": 40,
       "contributingFeatures": [
         "Fan-in ≥8 distinct counterparties",
         "Fan-out ≥8 distinct counterparties",
@@ -2523,9 +2523,9 @@
       "caseId": "CASE-2009",
       "entityId": "E0206",
       "typology": "Crypto Layering",
-      "riskScore": 87,
+      "riskScore": 56,
       "confidence": 77,
-      "jurisdictionRelevance": 70,
+      "jurisdictionRelevance": 35,
       "contributingFeatures": [
         "Sequential peel of a large balance into smaller outputs",
         "Geometric decay of transfer sizes",
@@ -2555,9 +2555,9 @@
       "caseId": "CASE-2010",
       "entityId": "E0174",
       "typology": "Unusual Velocity",
-      "riskScore": 83,
+      "riskScore": 52,
       "confidence": 72,
-      "jurisdictionRelevance": 70,
+      "jurisdictionRelevance": 35,
       "contributingFeatures": [
         "High-velocity crypto→exchange→USD wire conversion",
         "Multiple exchanges used in parallel",
@@ -2588,11 +2588,151 @@
   ];
 
   const historicalOutcomes = [
-    { caseId: "CASE-0902", result: "Referred to Enforcement", closeDate: "2013-08-19T13:44:00Z", analyst: "A. Stone" },
-    { caseId: "CASE-0905", result: "Intelligence Escalation", closeDate: "2013-08-29T10:12:00Z", analyst: "R. Chen" },
-    { caseId: "CASE-0908", result: "Monitoring Continued", closeDate: "2013-09-02T16:03:00Z", analyst: "J. Patel" },
-    { caseId: "CASE-0913", result: "Auto-closed", closeDate: "2013-09-08T09:21:00Z", analyst: "M. Turner" }
+    { caseId: "CASE-0902", result: "Supervisory Escalation", closeDate: "2013-08-19T13:44:00Z", analyst: "Examiner A. Stone" },
+    { caseId: "CASE-0905", result: "Additional Examiner Review", closeDate: "2013-08-29T10:12:00Z", analyst: "Examiner R. Chen" },
+    { caseId: "CASE-0908", result: "Monitoring Continued", closeDate: "2013-09-02T16:03:00Z", analyst: "Examiner J. Patel" },
+    { caseId: "CASE-0913", result: "Closed - No Finding", closeDate: "2013-09-08T09:21:00Z", analyst: "Examiner M. Turner" }
   ];
+
+  const transactionTestingPresets = [
+    {
+      id: "ctr-threshold",
+      label: "CTR Threshold Review",
+      description: "Surface cash-like activity near CTR thresholds, exemption questions, and related SAR decision evidence.",
+      criteria: ["Sub-threshold clustering", "CTR candidate status", "Exemption review", "Same-day aggregation"]
+    },
+    {
+      id: "sar-decision",
+      label: "SAR Decision Review",
+      description: "Review alert disposition, SAR filing rationale, narrative sufficiency, and source evidence.",
+      criteria: ["Suspicious activity trigger", "Narrative support", "Decision documentation", "Filing timeliness"]
+    },
+    {
+      id: "funds-transfer",
+      label: "Funds Transfer Review",
+      description: "Inspect originator, beneficiary, jurisdiction, account, and cross-border funds-transfer evidence.",
+      criteria: ["Originator/beneficiary completeness", "Jurisdiction exposure", "Correspondent-bank path", "Record support"]
+    },
+    {
+      id: "customer-account",
+      label: "Customer & Account Completeness",
+      description: "Check whether customer, ownership, account, and supporting bank-source records reconcile to the exception.",
+      criteria: ["Customer identifier", "Beneficial ownership", "Account status", "Source reconciliation"]
+    },
+    {
+      id: "digital-asset",
+      label: "Digital Asset Exposure",
+      description: "Prioritize digital asset activity as an OCC-relevant supervisory lens without making it the whole demo.",
+      criteria: ["Wallet/entity resolution", "Exchange off-ramp", "Counterparty concentration", "Control validation"]
+    }
+  ];
+
+  const regulatoryReviews = [
+    {
+      filingType: "SAR",
+      reportableTrigger: "Structured deposits and complex ownership chain require SAR decision review.",
+      requiredFieldsComplete: false,
+      dueDate: "2013-09-18",
+      filedDate: "2013-09-21",
+      timelinessStatus: "Late",
+      sourceRecordsReconciled: true,
+      examinerDisposition: "Request documentation for SAR timing rationale and ownership evidence."
+    },
+    {
+      filingType: "SAR",
+      reportableTrigger: "Trade finance and funds-transfer indicators require documented suspicious-activity decision.",
+      requiredFieldsComplete: true,
+      dueDate: "2013-09-22",
+      filedDate: "2013-09-16",
+      timelinessStatus: "On time",
+      sourceRecordsReconciled: true,
+      examinerDisposition: "Review narrative sufficiency and supporting wire documentation."
+    },
+    {
+      filingType: "CTR/SAR",
+      reportableTrigger: "Same-day sub-threshold deposits and high-risk wire activity require CTR aggregation and SAR review.",
+      requiredFieldsComplete: false,
+      dueDate: "2013-09-23",
+      filedDate: "2013-09-23",
+      timelinessStatus: "On time",
+      sourceRecordsReconciled: false,
+      examinerDisposition: "Open exception for missing customer/account support on related deposits."
+    },
+    {
+      filingType: "SAR",
+      reportableTrigger: "Funds-transfer and ownership indicators require suspicious-activity disposition review.",
+      requiredFieldsComplete: true,
+      dueDate: "2013-09-24",
+      filedDate: "2013-09-20",
+      timelinessStatus: "On time",
+      sourceRecordsReconciled: true,
+      examinerDisposition: "Validate evidence package against bank alert closure documentation."
+    },
+    {
+      filingType: "CTR/SAR",
+      reportableTrigger: "CTR threshold pattern plus high-risk counterparty activity requires dual reporting-quality review.",
+      requiredFieldsComplete: false,
+      dueDate: "2013-09-25",
+      filedDate: "2013-09-30",
+      timelinessStatus: "Late",
+      sourceRecordsReconciled: true,
+      examinerDisposition: "Document late filing driver and confirm exemption treatment."
+    },
+    {
+      filingType: "SAR",
+      reportableTrigger: "Digital asset exposure and vendor-wallet concentration require SAR decision review.",
+      requiredFieldsComplete: true,
+      dueDate: "2013-10-01",
+      filedDate: "2013-09-28",
+      timelinessStatus: "On time",
+      sourceRecordsReconciled: true,
+      examinerDisposition: "Review digital asset control evidence and exchange KYC support."
+    },
+    {
+      filingType: "SAR",
+      reportableTrigger: "Digital asset platform commission pattern requires documented monitoring disposition.",
+      requiredFieldsComplete: true,
+      dueDate: "2013-10-02",
+      filedDate: "2013-10-02",
+      timelinessStatus: "On time",
+      sourceRecordsReconciled: true,
+      examinerDisposition: "Confirm counterparty concentration rationale and monitoring threshold."
+    },
+    {
+      filingType: "SAR",
+      reportableTrigger: "Digital asset counterparty concentration requires review of suspicious-activity escalation.",
+      requiredFieldsComplete: false,
+      dueDate: "2013-10-04",
+      filedDate: "Pending",
+      timelinessStatus: "Pending",
+      sourceRecordsReconciled: false,
+      examinerDisposition: "Request missing wallet attribution and source-record reconciliation."
+    },
+    {
+      filingType: "SAR",
+      reportableTrigger: "Layered digital asset transfers require documented SAR decision and supporting evidence.",
+      requiredFieldsComplete: true,
+      dueDate: "2013-10-06",
+      filedDate: "2013-10-03",
+      timelinessStatus: "On time",
+      sourceRecordsReconciled: true,
+      examinerDisposition: "Validate transfer-chain evidence and decision rationale."
+    },
+    {
+      filingType: "SAR",
+      reportableTrigger: "High-velocity digital asset to USD conversion requires suspicious-activity decision review.",
+      requiredFieldsComplete: false,
+      dueDate: "2013-10-08",
+      filedDate: "Pending",
+      timelinessStatus: "Pending",
+      sourceRecordsReconciled: true,
+      examinerDisposition: "Track pending filing and confirm commercial-bank account support."
+    }
+  ];
+
+  flaggedCases.forEach((c, index) => {
+    c.regulatoryReview = regulatoryReviews[index % regulatoryReviews.length];
+  });
 
   const FinCENData = {
     entities,
@@ -2600,6 +2740,7 @@
     sanctionsList,
     flaggedCases,
     historicalOutcomes,
+    transactionTestingPresets,
     ingestionSources,
     entityResolution,
     jurisdictionRisk,

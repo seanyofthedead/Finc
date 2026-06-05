@@ -44,6 +44,7 @@
 
     analyticsGraphCanvas: document.getElementById("analytics-graph-canvas"),
     heatmapContainer: document.getElementById("heatmap-container"),
+    testingPresets: document.getElementById("testing-presets"),
     typologyFilterGroup: document.getElementById("typology-filter-group"),
     caseCardsContainer: document.getElementById("case-cards-container"),
     caseCardsSearch: document.getElementById("case-cards-search"),
@@ -116,33 +117,64 @@
 
   const typologyList = ["All"].concat(data.typologies);
 
+  const typologyDisplay = {
+    "Structuring": "CTR Threshold Pattern",
+    "TBML": "Trade Finance / Funds Transfer Review",
+    "Sanctions Evasion": "OFAC/BSA Risk Indicator",
+    "Crypto Layering": "Digital Asset Exposure",
+    "Unusual Velocity": "Reporting Velocity Indicator"
+  };
+
+  function displayTypology(typology) {
+    return typologyDisplay[typology] || typology;
+  }
+
+  function displayText(value) {
+    return String(value == null ? "" : value)
+      .replace(/Sanctions Evasion/g, "OFAC/BSA Risk Indicator")
+      .replace(/Crypto Layering/g, "Digital Asset Exposure")
+      .replace(/TBML/g, "Trade Finance / Funds Transfer Review")
+      .replace(/Unusual Velocity/g, "Reporting Velocity Indicator")
+      .replace(/Structuring/g, "CTR Threshold Pattern")
+      .replace(/shell-company chain/gi, "complex ownership chain")
+      .replace(/shell accounts/gi, "linked legal-entity records")
+      .replace(/sanctions graph/gi, "OFAC/BSA reference data")
+      .replace(/detector threshold crossed/gi, "examiner testing threshold crossed")
+      .replace(/anonymous marketplace escrow/gi, "digital asset exposure pattern")
+      .replace(/canonical mixer\/tumbler signature/gi, "digital asset counterparty concentration pattern")
+      .replace(/classic peel-chain obfuscation/gi, "layered digital asset transfer pattern")
+      .replace(/marketplace proceeds/gi, "digital asset activity")
+      .replace(/bribery typology/gi, "control-validation pattern")
+      .replace(/value to /gi, "activity to ");
+  }
+
   const coreCapabilities = [
     "Data Ingestion Framework",
     "Feature Engineering Library",
-    "Analytics & Detection Engine",
-    "Risk Scoring & Routing Core",
+    "Examiner Testing Engine",
+    "Supervisory Prioritization Core",
     "Governance & Audit Framework",
     "DevSecOps / Model Lifecycle Management"
   ];
 
   const missionModules = [
-    { id: "m1", label: "Crypto Intelligence Module", uses: [0, 1, 2, 3, 5] },
-    { id: "m2", label: "Sanctions Evasion Detection Module", uses: [0, 1, 2, 3, 4] },
-    { id: "m3", label: "Typology-Specific Detection Packs", uses: [1, 2, 3, 5] },
-    { id: "m4", label: "Workflow Customization Layer", uses: [0, 3, 4, 5] },
-    { id: "m5", label: "Model Validation & Tuning Toolkit", uses: [1, 2, 4, 5] }
+    { id: "m1", label: "Crypto & Digital Asset Supervision", uses: [0, 1, 2, 3, 5] },
+    { id: "m2", label: "SAR/CTR Reporting Quality", uses: [0, 1, 2, 3, 4] },
+    { id: "m3", label: "FFIEC Transaction Testing Presets", uses: [1, 2, 3, 5] },
+    { id: "m4", label: "Examiner Workflow Configuration", uses: [0, 3, 4, 5] },
+    { id: "m5", label: "Model Governance & Validation Toolkit", uses: [1, 2, 4, 5] }
   ];
 
   const guideSteps = [
-    { screen: "screen-pipeline", focus: "#source-grid", title: "1. Enterprise Ingestion", body: "Review six independent data sources with batch and streaming modes." },
-    { screen: "screen-pipeline", focus: "#entity-resolution-card", title: "2. Entity Resolution", body: "Duplicate profiles merge into canonical entities before analytics." },
-    { screen: "screen-signals", focus: "#feature-table-body", title: "3. Derived Signals", body: "Feature engineering creates reusable velocity, jurisdiction, ownership, and deviation signals." },
-    { screen: "screen-analytics", focus: "#analytics-graph-canvas", title: "4. Network Anomaly", body: "Graph and heatmap compress heterogeneous activity into analyst-relevant anomalies." },
-    { screen: "screen-triage", focus: "#decision-path", title: "5. Routing Logic", body: "Deterministic rules apply score/confidence thresholds to produce queue destinations." },
-    { screen: "screen-triage", focus: "#high-risk-slider", title: "6. Threshold Adjustment", body: "Policy sliders immediately re-route cases for what-if governance analysis." },
-    { screen: "screen-workspace", focus: "#evidence-grid", title: "7. Analyst Review", body: "Analyst inspects evidence, model explanations, and can apply governed overrides." },
-    { screen: "screen-workspace", focus: "#audit-log", title: "8. Audit Trail", body: "Every override and route action is timestamped for defensible decision records." },
-    { screen: "screen-enterprise", focus: "#mission-modules", title: "9. Enterprise Deployment & Expansion", body: "Modular mission packages are layered on a shared enterprise platform backbone." }
+    { screen: "screen-pipeline", focus: "#source-grid", title: "1. Bank Data Ingestion", body: "Review SAR, CTR, customer, account, funds transfer, and digital asset feeds with batch and streaming modes." },
+    { screen: "screen-pipeline", focus: "#entity-resolution-card", title: "2. Entity Resolution", body: "Duplicate source records merge into canonical customers, accounts, and counterparties before examiner testing." },
+    { screen: "screen-signals", focus: "#feature-table-body", title: "3. FFIEC-Aligned Signals", body: "Feature engineering creates reusable velocity, jurisdiction, ownership, reporting quality, and deviation indicators." },
+    { screen: "screen-analytics", focus: "#analytics-graph-canvas", title: "4. Transaction Testing", body: "Graph and heatmap compress heterogeneous activity into examiner-relevant testing patterns." },
+    { screen: "screen-triage", focus: "#decision-path", title: "5. Supervisory Routing", body: "Deterministic rules apply score and confidence thresholds to produce examiner review paths." },
+    { screen: "screen-triage", focus: "#high-risk-slider", title: "6. Threshold Adjustment", body: "Policy sliders immediately re-route exceptions for what-if governance analysis." },
+    { screen: "screen-workspace", focus: "#evidence-grid", title: "7. Examiner Review", body: "Examiner inspects evidence, model explanations, SAR/CTR lineage, and can apply governed overrides." },
+    { screen: "screen-workspace", focus: "#audit-log", title: "8. Audit Trail", body: "Every override and review action is timestamped for defensible examination records." },
+    { screen: "screen-enterprise", focus: "#mission-modules", title: "9. Enterprise Deployment & Expansion", body: "Configurable supervisory modules are layered on a shared enterprise platform backbone." }
   ];
 
   function setScreen(screenId) {
@@ -358,7 +390,7 @@
       tdEmpty.innerHTML = emptyState(
         isSearch
           ? { icon: "search", title: "No matches for \"" + appState.signalSearch + "\"", body: "Clear the search or try an entity name fragment.", hint: "" }
-          : { icon: "search", title: "No entities match this typology", body: "Pick a different typology above, or select \"All\" to see the full graph.", hint: "" }
+          : { icon: "search", title: "No entities match this testing pattern", body: "Pick a different testing pattern above, or select \"All\" to see the full graph.", hint: "" }
       );
       trEmpty.appendChild(tdEmpty);
       ui.featureTableBody.appendChild(trEmpty);
@@ -370,10 +402,10 @@
 
     const renderTypologyCell = (f) => {
       if (!f.typologyTag) return "<td></td>";
-      return "<td><span class='pill " + typologyPillClass(f.typologyTag) + "'>" + f.typologyTag + "</span></td>";
+      return "<td><span class='pill " + typologyPillClass(f.typologyTag) + "'>" + displayTypology(f.typologyTag) + "</span></td>";
     };
 
-    const provenanceTitle = "Case-enriched: formula includes risk-score and typology factor.";
+    const provenanceTitle = "Exception-enriched: formula includes supervisory risk score and testing-pattern factor.";
     const provIcon = (enriched) => {
       if (!enriched) return "";
       const iconHtml = window.FinCENIcons ? window.FinCENIcons.render("info", { size: 12 }) : "ⓘ";
@@ -443,14 +475,14 @@
 
     const rows = [];
     if (detail._caseEnriched) {
-      rows.push("<div class='metric-row'><span class='muted'>Case</span><span>" + detail.caseId + "</span></div>");
+      rows.push("<div class='metric-row'><span class='muted'>Exception</span><span>" + detail.caseId + "</span></div>");
     }
     rows.push("<div class='metric-row'><span class='muted'>Entity</span><span>" + detail.entityName + "</span></div>");
     rows.push("<div class='metric-row'><span class='muted'>Kind</span><span>" + (detail.entityKind || "\u2014") + "</span></div>");
     rows.push("<div class='metric-row'><span class='muted'>Jurisdiction</span><span>" + (detail.jurisdiction || "\u2014") + "</span></div>");
     if (detail._caseEnriched) {
-      rows.push("<div class='metric-row'><span class='muted'>Typology</span><span>" + detail.typologyTag + "</span></div>");
-      rows.push("<div class='metric-row'><span class='muted'>Raw Inputs</span><span>" + (detail.rawInputs || []).join("; ") + "</span></div>");
+      rows.push("<div class='metric-row'><span class='muted'>Testing Pattern</span><span>" + displayTypology(detail.typologyTag) + "</span></div>");
+      rows.push("<div class='metric-row'><span class='muted'>Raw Inputs</span><span>" + (detail.rawInputs || []).map(displayText).join("; ") + "</span></div>");
     }
     if (series) {
       const txPerDay = series.summary.txPerDay.toFixed(2);
@@ -462,7 +494,7 @@
       rows.push("<div class='metric-row'><span class='muted'>Velocity</span><span>No signal data available for this entity.</span></div>");
     }
     if (detail._caseEnriched) {
-      rows.push("<div class='metric-row'><span class='muted'>Enrichment</span><span>" + (detail.enrichmentSources || []).join(", ") + "</span></div>");
+      rows.push("<div class='metric-row'><span class='muted'>Enrichment</span><span>" + (detail.enrichmentSources || []).map(displayText).join(", ") + "</span></div>");
     }
     ui.featureDetail.innerHTML = rows.join("");
 
@@ -614,6 +646,7 @@
     }
     ensurePulseLoop();
     window.FinCENViz.renderHeatmap(ui.heatmapContainer, engine.getHeatmap());
+    renderTestingPresets();
 
     if (!analyticsInteractionsAttached && window.FinCENGraphInteractions) {
       if (window.FinCENEntityPanel) {
@@ -654,7 +687,7 @@
             .filter((t) => relatedTxIds.has(t.id) || t.fromEntityId === nodeId || t.toEntityId === nodeId)
             .slice(0, 6);
           window.FinCENEntityPanel.show(entity, {
-            case: matchedCase ? { riskScore: matchedCase.riskScore, typology: matchedCase.typology, whyFlagged: matchedCase.whyFlagged } : null,
+            case: matchedCase ? { riskScore: matchedCase.riskScore, typology: displayTypology(matchedCase.typology), whyFlagged: displayText(matchedCase.whyFlagged) } : null,
             sanctioned: analyticsGraphCache.overlay.sanctionedIds.indexOf(nodeId) >= 0,
             recentTransactions,
             onOpenWorkspace: (id) => {
@@ -684,7 +717,7 @@
     typologyList.forEach((t) => {
       const b = document.createElement("button");
       b.className = "btn";
-      b.textContent = t;
+      b.textContent = displayTypology(t);
       b.setAttribute("aria-pressed", engine.getState().selectedTypology === t ? "true" : "false");
       if (engine.getState().selectedTypology === t) {
         b.classList.add("accent");
@@ -720,7 +753,7 @@
         card.appendChild(empty);
       }
       const typology = engine.getState().selectedTypology;
-      empty.textContent = "No entities match the \u201C" + typology + "\u201D pattern. Select \u201CAll\u201D to restore the full network.";
+      empty.textContent = "No entities match the \u201C" + displayTypology(typology) + "\u201D pattern. Select \u201CAll\u201D to restore the full network.";
       ui.analyticsGraphCanvas.setAttribute("aria-hidden", "true");
       ui.analyticsGraphCanvas.style.visibility = "hidden";
     } else {
@@ -728,6 +761,18 @@
       ui.analyticsGraphCanvas.setAttribute("aria-hidden", "false");
       ui.analyticsGraphCanvas.style.visibility = "";
     }
+  }
+
+  function renderTestingPresets() {
+    if (!ui.testingPresets) return;
+    const presets = data.transactionTestingPresets || [];
+    ui.testingPresets.innerHTML = presets.map((preset) =>
+      "<div class='testing-preset'>" +
+        "<div class='metric-row'><strong>" + preset.label + "</strong><span class='pill risk-low'>Preset</span></div>" +
+        "<p class='muted'>" + preset.description + "</p>" +
+        "<div class='preset-criteria'>" + (preset.criteria || []).map((criterion) => "<span>" + criterion + "</span>").join("") + "</div>" +
+      "</div>"
+    ).join("");
   }
 
   function renderCaseCards(routingResults) {
@@ -742,6 +787,7 @@
       const entityName = entityById[c.entityId] ? entityById[c.entityId].name.toLowerCase() : "";
       return c.caseId.toLowerCase().indexOf(q) !== -1
         || c.typology.toLowerCase().indexOf(q) !== -1
+        || displayTypology(c.typology).toLowerCase().indexOf(q) !== -1
         || (c.entityId || "").toLowerCase().indexOf(q) !== -1
         || entityName.indexOf(q) !== -1;
     });
@@ -768,8 +814,8 @@
     if (!sorted.length) {
       ui.caseCardsContainer.innerHTML = emptyState(
         q
-          ? { icon: "search", title: "No cases match '" + q + "'.", body: "Clear the search or broaden the typology filter.", hint: "Search \u00b7 No results" }
-          : { icon: "search", title: "No cases match the current filter.", body: "Adjust the typology filter above or widen the policy thresholds on the Triage screen.", hint: "Filter \u00b7 No results" }
+          ? { icon: "search", title: "No exceptions match '" + q + "'.", body: "Clear the search or broaden the testing-pattern filter.", hint: "Search \u00b7 No results" }
+          : { icon: "search", title: "No exceptions match the current filter.", body: "Adjust the testing-pattern filter above or widen the supervisory thresholds.", hint: "Filter \u00b7 No results" }
       );
       if (window.FinCENIcons) window.FinCENIcons.hydrate(ui.caseCardsContainer);
       return;
@@ -780,12 +826,12 @@
       const card = document.createElement("div");
       card.className = "case-card";
       card.innerHTML =
-        "<div class='metric-row'><strong>" + c.caseId + "</strong><span class='pill " + scoreClass(c.riskScore) + "'>" + c.typology + "</span></div>" +
+        "<div class='metric-row'><strong>" + c.caseId + "</strong><span class='pill " + scoreClass(c.riskScore) + "'>" + displayTypology(c.typology) + "</span></div>" +
         "<div class='metric-row'><span class='muted'>Entity</span><span>" + entityName + "</span></div>" +
         "<div class='metric-row'><span class='muted'>Confidence</span><span>" + c.confidence + "%</span></div>" +
-        "<div class='metric-row'><span class='muted'>Destination</span><span>" + c.destination + "</span></div>" +
-        "<div class='muted' style='font-size:0.82rem;margin:6px 0'>" + c.contributingFeatures.join(" | ") + "</div>" +
-        "<div style='font-size:0.82rem'>" + c.whyFlagged + "</div>" +
+        "<div class='metric-row'><span class='muted'>Review Path</span><span>" + c.destination + "</span></div>" +
+        "<div class='muted' style='font-size:0.82rem;margin:6px 0'>" + c.contributingFeatures.map(displayText).join(" | ") + "</div>" +
+        "<div style='font-size:0.82rem'>" + displayText(c.whyFlagged) + "</div>" +
         "<canvas class='mini-canvas gauge'></canvas>";
       ui.caseCardsContainer.appendChild(card);
       const gauge = card.querySelector("canvas");
@@ -810,10 +856,10 @@
     ui.routingBoard.innerHTML = "";
     const Q = window.FinCENEngine.QUEUE_NAMES;
     const QUEUE_EMPTY_COPY = {
-      [Q.INTELLIGENCE]: { title: "No cases pending intelligence review.", body: "High-risk, low-confidence cases arrive here." },
-      [Q.ENFORCEMENT]:  { title: "No active enforcement referrals.", body: "High-risk, high-confidence cases escalate here." },
-      [Q.ANALYST_REVIEW]: { title: "No cases awaiting analyst review.", body: "Medium-risk cases land here for human judgment." },
-      [Q.MONITORING]:   { title: "No cases in passive monitoring.", body: "Low-risk cases auto-close here." }
+      [Q.INTELLIGENCE]: { title: "No exceptions pending additional examiner review.", body: "High-risk, lower-confidence exceptions arrive here." },
+      [Q.ENFORCEMENT]:  { title: "No active supervisory escalations.", body: "High-risk, high-confidence exceptions escalate here." },
+      [Q.ANALYST_REVIEW]: { title: "No exceptions awaiting examiner review.", body: "Medium-risk exceptions land here for examiner judgment." },
+      [Q.MONITORING]:   { title: "No exceptions in monitoring / no finding.", body: "Low-risk exceptions close here with documented rationale." }
     };
     const entityById = {};
     data.entities.forEach((e) => { entityById[e.id] = e; });
@@ -824,6 +870,7 @@
       const name = entity ? entity.name.toLowerCase() : "";
       return c.caseId.toLowerCase().indexOf(q) !== -1
         || c.typology.toLowerCase().indexOf(q) !== -1
+        || displayTypology(c.typology).toLowerCase().indexOf(q) !== -1
         || (c.entityId || "").toLowerCase().indexOf(q) !== -1
         || name.indexOf(q) !== -1;
     };
@@ -861,7 +908,7 @@
             item.className = "route-card";
             item.innerHTML =
               "<strong>" + c.caseId + "</strong> <span class='muted'>" + entityName + "</span><br/>" +
-              "<span class='muted'>" + c.typology + "</span><br/>" +
+              "<span class='muted'>" + displayTypology(c.typology) + "</span><br/>" +
               "Risk " + c.riskScore + " | Confidence " + c.confidence +
               (c.overridden ? "<br/><span class='pill risk-medium'>Overridden</span>" : "");
             col.appendChild(item);
@@ -871,7 +918,7 @@
     });
     if (ui.routingResultCount) {
       ui.routingResultCount.textContent = q
-        ? "Showing " + totalShown + " of " + totalCases + " cases"
+        ? "Showing " + totalShown + " of " + totalCases + " exceptions"
         : "";
     }
     if (window.FinCENIcons) window.FinCENIcons.hydrate(ui.routingBoard);
@@ -887,16 +934,21 @@
     window.FinCENViz.drawScatter(ui.triageScatterCanvas, routing.results, policy);
     updateTabBadges(routing);
     renderKPIStrip(routing);
+    ui.kpiBias.textContent = window.FinCENEngine.computeReviewBalance(
+      routing.results,
+      data.entities,
+      { highRiskThreshold: policy.highRiskThreshold }
+    ).label;
   }
 
   function updateTabBadges(routing) {
     const triageTab = ui.tabNav.querySelector('[data-screen="screen-triage"]');
     const workspaceTab = ui.tabNav.querySelector('[data-screen="screen-workspace"]');
     if (triageTab) {
-      triageTab.textContent = "Risk Scoring & Triage (" + routing.results.length + ")";
+      triageTab.textContent = "Supervisory Prioritization (" + routing.results.length + ")";
     }
     if (workspaceTab) {
-      workspaceTab.textContent = "Analyst Workspace (" + routing.queues[window.FinCENEngine.QUEUE_NAMES.ANALYST_REVIEW].length + ")";
+      workspaceTab.textContent = "Examiner Workspace (" + routing.queues[window.FinCENEngine.QUEUE_NAMES.ANALYST_REVIEW].length + ")";
     }
   }
 
@@ -961,6 +1013,7 @@
       const entityName = entity ? entity.name : "";
       return c.caseId.toLowerCase().indexOf(q) !== -1
         || c.typology.toLowerCase().indexOf(q) !== -1
+        || displayTypology(c.typology).toLowerCase().indexOf(q) !== -1
         || entityName.toLowerCase().indexOf(q) !== -1
         || (c.entityId || "").toLowerCase().indexOf(q) !== -1;
     };
@@ -971,7 +1024,7 @@
       const entityName = entity ? entity.name : c.entityId;
       const opt = document.createElement("option");
       opt.value = c.caseId;
-      opt.textContent = c.caseId + " - " + entityName + " - " + c.typology + " (" + c.destination + ")";
+      opt.textContent = c.caseId + " - " + entityName + " - " + displayTypology(c.typology) + " (" + c.destination + ")";
       ui.workspaceCaseSelect.appendChild(opt);
     });
     if (filtered.length === 0) {
@@ -979,7 +1032,7 @@
       // whatever it was so the user can clear search to restore context.
       const opt = document.createElement("option");
       opt.disabled = true;
-      opt.textContent = "No cases match '" + (appState.workspaceSearch || "") + "'";
+      opt.textContent = "No exceptions match '" + (appState.workspaceSearch || "") + "'";
       ui.workspaceCaseSelect.appendChild(opt);
     } else {
       const stillVisible = filtered.some((c) => c.caseId === appState.selectedWorkspaceCase);
@@ -1005,11 +1058,28 @@
     const base = data.flaggedCases.find((x) => x.caseId === c.caseId);
     const entity = data.entities.find((e) => e.id === c.entityId);
     const tx = data.transactions.filter((t) => base.relatedTransactionIds.indexOf(t.id) >= 0);
+    const review = base.regulatoryReview || {};
+    const fieldStatusClass = review.requiredFieldsComplete ? "risk-low" : "risk-medium";
+    const reconciliationClass = review.sourceRecordsReconciled ? "risk-low" : "risk-medium";
+    const timelinessClass = review.timelinessStatus === "On time" ? "risk-low" : review.timelinessStatus === "Late" ? "risk-high" : "risk-medium";
 
     ui.evidenceGrid.innerHTML =
       "<div class='evidence'><h4>Entity Profile</h4><div>" + entity.name + "</div><div class='muted'>" + entity.jurisdiction + " | " + entity.kind + "</div></div>" +
-      "<div class='evidence'><h4>Model Explanation</h4><div class='muted'>" + c.whyFlagged + "</div></div>" +
-      "<div class='evidence'><h4>Contributing Features</h4><div class='muted'>" + c.contributingFeatures.join(", ") + "</div></div>" +
+      "<div class='evidence'><h4>Examiner Testing Rationale</h4><div class='muted'>" + displayText(c.whyFlagged) + "</div></div>" +
+      "<div class='evidence'><h4>FFIEC-Aligned Indicators</h4><div class='muted'>" + c.contributingFeatures.map(displayText).join(", ") + "</div></div>" +
+      "<div class='evidence'><h4>SAR/CTR Validation</h4>" +
+        "<div class='metric-row'><span class='muted'>Filing Type</span><span>" + (review.filingType || "SAR/CTR") + "</span></div>" +
+        "<div class='metric-row'><span class='muted'>Required Fields</span><span class='pill " + fieldStatusClass + "'>" + (review.requiredFieldsComplete ? "Complete" : "Exception") + "</span></div>" +
+        "<div class='metric-row'><span class='muted'>Timeliness</span><span class='pill " + timelinessClass + "'>" + (review.timelinessStatus || "Pending") + "</span></div>" +
+        "<div class='metric-row'><span class='muted'>Source Records</span><span class='pill " + reconciliationClass + "'>" + (review.sourceRecordsReconciled ? "Reconciled" : "Gap") + "</span></div>" +
+      "</div>" +
+      "<div class='evidence'><h4>Reporting Lineage</h4>" +
+        "<div class='muted'>" + (review.reportableTrigger || "Source transactions traced to SAR/CTR candidate record, filing status, timeliness window, and supporting customer/account evidence.") + "</div>" +
+        "<div class='spacer-sm'></div>" +
+        "<div class='metric-row'><span class='muted'>Due</span><span>" + (review.dueDate || "Pending") + "</span></div>" +
+        "<div class='metric-row'><span class='muted'>Filed</span><span>" + (review.filedDate || "Pending") + "</span></div>" +
+      "</div>" +
+      "<div class='evidence'><h4>Examiner Disposition</h4><div class='muted'>" + (review.examinerDisposition || "Document review rationale before closure or escalation.") + "</div></div>" +
       "<div class='evidence'><h4>Transaction Evidence</h4><div class='muted'>" +
       tx.slice(0, 3).map((t) => t.id + " $" + t.amountUsd.toLocaleString() + " " + t.channel).join("<br/>") +
       "</div></div>";
@@ -1032,26 +1102,20 @@
   }
 
   function renderBiasIndicator() {
-    const byJurisdiction = {};
-    engine.getRouting().results.forEach((r) => {
-      const e = data.entities.find((x) => x.id === r.entityId);
-      byJurisdiction[e.jurisdiction] = byJurisdiction[e.jurisdiction] || { high: 0, total: 0 };
-      byJurisdiction[e.jurisdiction].total += 1;
-      if (r.riskScore >= 85) {
-        byJurisdiction[e.jurisdiction].high += 1;
-      }
-    });
-    const ratios = Object.values(byJurisdiction).map((x) => x.high / Math.max(1, x.total));
-    const spread = Math.max.apply(null, ratios) - Math.min.apply(null, ratios);
-    ui.biasIndicator.className = "pill " + (spread < 0.25 ? "risk-low" : spread < 0.45 ? "risk-medium" : "risk-high");
-    ui.biasIndicator.textContent = spread < 0.25 ? "Green" : spread < 0.45 ? "Amber" : "Red";
+    const status = window.FinCENEngine.computeReviewBalance(
+      engine.getRouting().results,
+      data.entities,
+      { highRiskThreshold: engine.getState().policy.highRiskThreshold }
+    );
+    ui.biasIndicator.className = "pill " + status.className;
+    ui.biasIndicator.textContent = status.label;
     ui.kpiBias.textContent = ui.biasIndicator.textContent;
-    ui.biasDetail.innerHTML = Object.keys(byJurisdiction)
-      .sort()
-      .map((j) => {
-        const r = byJurisdiction[j];
-        const pct = Math.round((r.high / Math.max(1, r.total)) * 100);
-        return j + ": " + pct + "% high-risk (" + r.high + "/" + r.total + ")";
+    ui.biasDetail.innerHTML =
+      "<div>" + status.detail + "</div>" +
+      "<div class='spacer-sm'></div>" +
+      status.rows.map((r) => {
+        const pct = Math.round(r.rate * 100);
+        return r.jurisdiction + ": " + pct + "% high-risk (" + r.high + "/" + r.total + ")";
       })
       .join("<br/>");
   }
@@ -1074,7 +1138,7 @@
         appState.selectedWorkspaceCase,
         Number(ui.overrideScore.value),
         ui.overrideRationale.value,
-        "Analyst K. Rivera"
+        "Examiner K. Rivera"
       );
       renderWorkspace();
       renderAnalytics();
@@ -1101,8 +1165,8 @@
       engine.routeCaseAction(
         appState.selectedWorkspaceCase,
         appState.pendingAction,
-        "Analyst K. Rivera",
-        ui.overrideRationale.value || "Manual analyst action."
+        "Examiner K. Rivera",
+        ui.overrideRationale.value || "Manual examiner action."
       );
       appState.pendingAction = null;
       ui.confirmBar.classList.remove("active");
@@ -1287,9 +1351,9 @@
     const screens = [
       { id: "screen-pipeline", title: "Go to Pipeline",          icon: "pipeline" },
       { id: "screen-signals",   title: "Go to Signal Engineering", icon: "signals" },
-      { id: "screen-analytics", title: "Go to Analytics & Detection", icon: "analytics" },
-      { id: "screen-triage",    title: "Go to Risk Scoring & Triage", icon: "triage" },
-      { id: "screen-workspace", title: "Go to Analyst Workspace", icon: "workspace" },
+      { id: "screen-analytics", title: "Go to Transaction Testing", icon: "analytics" },
+      { id: "screen-triage",    title: "Go to Supervisory Prioritization", icon: "triage" },
+      { id: "screen-workspace", title: "Go to Examiner Workspace", icon: "workspace" },
       { id: "screen-enterprise",title: "Go to Enterprise Deployment", icon: "enterprise" }
     ];
     screens.forEach((s) => {
@@ -1306,8 +1370,8 @@
     typologyList.forEach((t) => {
       cmd.registerCommand({
         id: "filter.typology." + t.toLowerCase().replace(/\s+/g, "-"),
-        title: "Filter cases: " + t,
-        keywords: "typology pattern " + t,
+        title: "Filter exceptions: " + displayTypology(t),
+        keywords: "typology pattern testing exception " + t + " " + displayTypology(t),
         icon: "triage",
         action: () => {
           engine.setTypologyFilter(t);
@@ -1348,7 +1412,7 @@
 
     cmd.registerCommand({
       id: "action.clear-path",
-      title: "Clear traced fund-flow path",
+      title: "Clear traced transaction path",
       keywords: "path trace reset",
       icon: "analytics",
       action: () => {
@@ -1377,14 +1441,14 @@
       }
     });
 
-    // Top-N flagged cases as jump-to-entity commands.
+    // Top-N exceptions as jump-to-entity commands.
     data.flaggedCases.slice(0, 30).forEach((fc) => {
       const entity = data.entities.find((e) => e.id === fc.entityId);
       if (!entity) return;
       cmd.registerCommand({
         id: "entity." + entity.id,
         title: "Find entity: " + entity.name,
-        keywords: entity.kind + " " + entity.jurisdiction + " " + fc.typology + " " + entity.id,
+        keywords: entity.kind + " " + entity.jurisdiction + " " + fc.typology + " " + displayTypology(fc.typology) + " " + entity.id,
         hint: entity.jurisdiction,
         icon: entity.kind === "shell_company" ? "shield" : entity.kind === "crypto_service" ? "bitcoin" : "building",
         action: () => {

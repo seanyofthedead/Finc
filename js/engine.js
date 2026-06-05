@@ -5,10 +5,10 @@
   // object, routeCaseAction(), and app.js's empty-state copy map. Exposed on
   // the engine export so UI code keys off the same strings.
   const QUEUE_NAMES = {
-    INTELLIGENCE: "Intelligence Queue",
-    ENFORCEMENT: "Enforcement Referral",
-    ANALYST_REVIEW: "Analyst Review",
-    MONITORING: "Monitoring / Auto-close"
+    INTELLIGENCE: "Additional Examiner Review",
+    ENFORCEMENT: "Supervisory Escalation",
+    ANALYST_REVIEW: "Examiner Review",
+    MONITORING: "Monitoring / No Finding"
   };
 
   function indexById(items) {
@@ -167,6 +167,64 @@
     });
 
     return { results, queues };
+  }
+
+  function computeReviewBalance(routingResults, entities, options) {
+    const opts = options || {};
+    const minTotalCases = opts.minTotalCases || 30;
+    const minJurisdictionCases = opts.minJurisdictionCases || 3;
+    const minQualifiedJurisdictions = opts.minQualifiedJurisdictions || 2;
+    const highRiskThreshold = opts.highRiskThreshold || 85;
+    const entityById = indexById(entities || []);
+    const byJurisdiction = {};
+
+    (routingResults || []).forEach((r) => {
+      const entity = entityById[r.entityId];
+      const jurisdiction = entity ? entity.jurisdiction : "Unknown";
+      byJurisdiction[jurisdiction] = byJurisdiction[jurisdiction] || { high: 0, total: 0 };
+      byJurisdiction[jurisdiction].total += 1;
+      if (r.riskScore >= highRiskThreshold) {
+        byJurisdiction[jurisdiction].high += 1;
+      }
+    });
+
+    const rows = Object.keys(byJurisdiction)
+      .sort()
+      .map((jurisdiction) => {
+        const item = byJurisdiction[jurisdiction];
+        return {
+          jurisdiction,
+          high: item.high,
+          total: item.total,
+          rate: item.high / Math.max(1, item.total)
+        };
+      });
+
+    const rates = rows.map((r) => r.rate);
+    const spread = rates.length ? Math.max.apply(null, rates) - Math.min.apply(null, rates) : 0;
+    const qualifiedJurisdictions = rows.filter((r) => r.total >= minJurisdictionCases).length;
+    const isSampleLimited = (routingResults || []).length < minTotalCases || qualifiedJurisdictions < minQualifiedJurisdictions;
+
+    if (isSampleLimited) {
+      return {
+        label: "Sample Limited",
+        className: "risk-medium",
+        isSampleLimited: true,
+        spread,
+        rows,
+        detail: "Synthetic demo sample is too small for jurisdiction-balance conclusions."
+      };
+    }
+
+    const label = spread < 0.25 ? "Green" : spread < 0.45 ? "Amber" : "Red";
+    return {
+      label,
+      className: spread < 0.25 ? "risk-low" : spread < 0.45 ? "risk-medium" : "risk-high",
+      isSampleLimited: false,
+      spread,
+      rows,
+      detail: "Jurisdiction high-risk routing spread is " + Math.round(spread * 100) + " percentage points."
+    };
   }
 
   function buildGraph(data) {
@@ -461,7 +519,7 @@
       timestamp: x.closeDate,
       actor: x.analyst,
       action: x.result,
-      details: "Historical case outcome imported for audit context."
+      details: "Historical supervisory outcome imported for audit context."
     }));
     entries.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
     return entries;
@@ -561,8 +619,8 @@
           destination: routeCase({ ...target, riskScore: clamp(Number(riskScore), 0, 100) }, state.policy)
         };
         this.addAuditEntry({
-          actor: actor || "Analyst",
-          action: "Risk Score Override",
+          actor: actor || "Examiner",
+          action: "Supervisory Risk Override",
           caseId,
           details: "Risk changed from " + target.riskScore + " to " + state.overrides[caseId].riskScore + ". Rationale: " + state.overrides[caseId].rationale
         });
@@ -581,7 +639,7 @@
         state.overrides[caseId] = state.overrides[caseId] || {};
         state.overrides[caseId].destination = destinationMap[action];
         this.addAuditEntry({
-          actor: actor || "Analyst",
+          actor: actor || "Examiner",
           action: action,
           caseId,
           details: note || "Manual routing action taken."
@@ -603,6 +661,7 @@
 
   window.FinCENEngine = {
     buildEngine,
+    computeReviewBalance,
     QUEUE_NAMES
   };
 })();

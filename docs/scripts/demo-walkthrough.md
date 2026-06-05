@@ -1,126 +1,101 @@
-# App Demo Script — FinCEN AML Platform
+# App Demo Script - OCC BSA/AML Supervisory Risk Sensing Micro-Pilot
 
-*Estimated speaking time: ~5–6 minutes at a steady pace. Stage directions in italics. Pauses marked with `(pause)`.*
+*Estimated speaking time: 5-6 minutes. Stage directions in italics. This script is for the OCC retargeted demo and should be used instead of the original FinCEN/law-enforcement voice track.*
 
 ---
 
-## Opening — KPI strip visible at the top
+## Opening - KPI strip visible at the top
 
-What you're looking at is a synthetic AML analytics surface. 212 entities. About 2,000 transactions. 10 flagged cases. Everything on-screen is deterministic and seeded; there's nothing hitting a live system.
+This is a synthetic OCC BSA/AML supervisory risk sensing micro-pilot. It uses 212 entities, about 2,000 transactions, and 10 surfaced exam exceptions. Nothing is connected to a live agency or bank system. The point is to show how an existing data and AI capability can be adapted quickly into an examiner-oriented view.
 
-Before I touch anything, look at the top of the page. **Six KPI cards.**
-
-The one on the left — **Total Entities: 212** — is the population the intelligence graph is tracking. Next to it, **Total Cases: 10**. That's what the detection layer has surfaced as worth an analyst's time. Out of 212 entities, the platform has reduced the workload to 10. That compression ratio is the whole point.
-
-The rest of the cards — Enforcement Referrals, Intelligence Queue, Average Risk, Bias Status — describe what's happening to those 10 cases.
+The top KPI strip frames the demo in supervisory terms: total entities, exam exceptions, supervisory escalations, additional review, average supervisory risk, and governance status. These are not final findings. They are a way to focus examiner attention and preserve a clear evidence trail.
 
 (pause)
 
 ---
 
-## Tab 1 — Data Pipeline
+## Tab 1 - Data Pipeline
 
 *(Landing tab. No click needed.)*
 
-Starting on the left: **Data Pipeline**. This is the ingestion and fusion layer.
+Start with the Data Pipeline. This is the source-to-evidence layer.
 
-**Six feeds.** SARs and CTRs from BSA filings. OFAC sanctions. Crypto ledger data. Bank core metadata. Cross-border wires. Some are streaming, some are batch — the tags on each card tell you which.
+The six feeds are examination-relevant: SAR reporting, CTR reporting, customer and account data, digital asset activity, bank metadata, and funds transfer records. Each card shows whether the feed is batch or streaming and how fresh it is. That matters for the FFIEC-aligned questions of completeness, accuracy, timeliness, and traceability.
 
-The middle panel shows **entity resolution** — before and after. 216 raw profiles collapse into **212 canonical entities**. Four of them were duplicate SAR filings for the same real person; the resolver merged them. The merge list underneath shows the four examples with confidence scores.
+The middle panel shows entity resolution. Duplicate source records collapse into canonical customers, accounts, and counterparties before testing begins. The purpose is not to make a black-box determination; it is to give the examiner a clearer population for transaction testing.
 
-At the bottom, a **preview of the intelligence graph** — the top 36 most-connected nodes. Same graph we'll see in full on the Analytics tab. This is where the platform becomes more than just a collection of feeds — separate data sources are now a single connected graph.
+At the bottom, the graph preview shows how the feeds become one evidence graph. This is the bridge from bank source data to FinCEN-reportable outputs like SARs and CTRs.
 
 ---
 
-## Tab 2 — Signal Engineering
+## Tab 2 - Signal Engineering
 
 *(Click Signal Engineering.)*
 
-Feature engineering. Five derived signals computed for **every** entity:
-**Velocity** — how often they transact. **Jurisdiction risk**. **Ownership network depth**. **Peer deviation** — how they compare to their kind-cohort. **Cross-border flag**.
+The signal layer converts raw activity into examiner-aligned indicators: transaction velocity, jurisdiction exposure, ownership depth, peer deviation, and cross-border activity. These indicators can support scoping and sample selection, but they do not replace examiner judgment.
 
-Look at the table. **212 rows** — one per entity. The ten at the top with the amber left-border and the `CASE-2001` chips are flagged case subjects. They surface first because the default sort puts cases ahead of the background population.
+The table keeps the same population as the graph. The surfaced exceptions rise to the top because they need review. Click an exception row and the detail panel shows the underlying rationale, raw inputs, enrichment sources, and trend lines. That is the key OCC story: the signal is inspectable and tied back to evidence.
 
-The small **ⓘ icon** in the numeric cells means the score was computed using case-specific inputs, not just the entity's raw transaction stats. That's how we keep provenance visible.
+*(Type "nils" in the search input, then clear it.)*
 
-*(Type "nils" in the search input.)*
-
-**Search** narrows to three entities — Nils Demir and his immediate network. (pause)
-
-*(Clear search. Click the Velocity column header.)*
-
-**Column headers are keyboard-accessible** — tabindex, Enter or Space to activate. Clicking cycles between ascending and descending. Numeric columns default to descending on first click, alphabetical columns to ascending.
-
-*(Click a case row — Nils Demir.)*
-
-The right-hand **detail panel** shows raw inputs, the why-flagged rationale, enrichment sources, and two **sparklines**: velocity across eight time windows, and peer deviation against the entity's kind-cohort in σ units from the MAD. Click any non-case row and you get the entity-intrinsic view — same sparklines, no case-specific fields.
+Search and sort are practical examiner tools. They let a user narrow the population by entity, exception ID, or indicator without changing the underlying source data.
 
 ---
 
-## Tab 3 — Analytics & Detection
+## Tab 3 - Transaction Testing
 
-*(Click Analytics & Detection.)*
+*(Click Transaction Testing.)*
 
-Detection layer. This is the graph view the whole platform pivots around.
+This tab is the examiner testing surface. The graph helps an examiner review relationships across accounts, counterparties, jurisdictions, and transactions.
 
-**212 nodes, aggregated to the top 60 edges** by transaction volume. Nodes are colored by risk — green, amber, red. Shapes indicate kind: shell companies are diamonds, banks are squares, crypto services are hexagons, disposable wallets are triangles. Sanctioned entities carry a **red halo**. Mixers have a **pulsing amber ring**. Shell-chain members are boxed in amber.
+The FFIEC Transaction Testing Presets make the pivot explicit. CTR Threshold Review focuses on aggregation and exemption questions. SAR Decision Review focuses on alert disposition, narrative support, and filing timeliness. Funds Transfer Review focuses on originator, beneficiary, jurisdiction, and record support. Customer and Account Completeness checks ownership and account evidence. Digital Asset Exposure keeps crypto in scope as an OCC-relevant policy lens without making it the entire demo.
 
-Click a node for details. **Shift-click a second node** to trace the shortest fund-flow path between them — that's the dashed amber line.
+*(Click a testing-pattern filter.)*
 
-*(Click the "Crypto Layering" typology filter button.)*
+The graph, KPI strip, exception cards, and routing board stay synchronized. That lets the examiner move from scoping to testing to review without losing the evidence context.
 
-Filter the graph by **Crypto Layering**. Now the graph narrows to about 32 entities — the four case subjects plus their one-hop counterparties. Look at the top: **Total Entities KPI dropped to 32**. Every view in the app is now showing the same population. The Signal table, the KPI cards, the routing board — all mirror the graph's current filter. That's the source-of-truth principle the whole platform is organized around.
-
-Below the graph, the **Anomaly Heatmap** — jurisdiction on the rows, typology on the columns. Ambient transaction volume overlaid with flagged-case intensity.
-
-Further down, the **Flagged Case Patterns** cards. *(Type "mix" in the card search.)* One card — Tumbler Mix Pool. *(Clear.) (Select "Confidence (high → low)" in the sort dropdown.)* Pivot between ranking dimensions. *(Switch back to All filter.)*
+Below the graph, the exception cards summarize the testing pattern, entity, confidence, review path, and supporting indicators. This is where a reviewer can decide whether to open the item in the workspace for documentation.
 
 ---
 
-## Tab 4 — Risk Scoring & Triage
+## Tab 4 - Supervisory Prioritization
 
-*(Click Risk Scoring & Triage.)*
+*(Click Supervisory Prioritization.)*
 
-Policy layer. **Three sliders**: high-risk threshold, confidence threshold, jurisdiction weight. The decision path below them is live — deterministic rules that govern every route.
+This is the governance layer. Three controls drive the routing logic: high-risk threshold, confidence threshold, and jurisdiction weight. The decision path makes the rules visible.
 
-*(Drop the High Risk slider to 80.)*
+*(Move the High Risk slider down, then return it to 85.)*
 
-The **routing board** re-bucketed in real time. Some cases moved from Enforcement Referral into Intelligence Queue. *(Pull it back to 85.)*
+The routing board re-buckets in real time. Exceptions can move to supervisory escalation, additional examiner review, examiner review, or monitoring/no finding. The important message is that the thresholds are transparent, adjustable, and auditable.
 
-The routing board shows all 10 cases across **four queues** — Intelligence, Enforcement, Analyst Review, Monitoring. Each card shows case ID, entity name, typology, risk, confidence. *(Type "crypto" in the routing search.)* Search across all queues — four Crypto Layering cases, wherever they landed.
-
-*(Clear search.)* The **scatter plot** on the right plots risk against confidence with the threshold lines drawn. Anything in the top-right quadrant auto-routes to enforcement. Anything top-left gets flagged for intelligence work because risk is high but we're not certain yet.
-
-This is what governance looks like in a platform: the policy isn't buried in code, it's surfaced as controls an analyst or auditor can manipulate and inspect.
+This is useful for an OCC executive conversation because it shows both risk sensing and governance. The system can prioritize, but the examiner still sees the rule path and can document the final decision.
 
 ---
 
-## Tab 5 — Analyst Workspace
+## Tab 5 - Examiner Workspace
 
-*(Click Analyst Workspace.)*
+*(Click Examiner Workspace.)*
 
-Where an analyst actually spends their day.
+This is where the demo becomes concrete. Select an exception and the workspace shows entity profile, testing rationale, FFIEC-aligned indicators, SAR/CTR validation, reporting lineage, examiner disposition, and supporting transactions.
 
-**Case selector** at the top — search by entity name, case ID, or typology. *(Type "demir".)* One match — CASE-2001, Nils Demir. *(Select it.)*
+The SAR/CTR validation card is the important new OCC proof point. It shows filing type, whether required fields are complete, whether the filing is on time, and whether source records reconcile. The reporting lineage card shows the reportable trigger, due date, and filed date.
 
-The **evidence grid** populates with raw inputs, the model's contributing features, and the routing destination. An analyst can override the risk score with a rationale. *(Hover the Apply Override button; don't click.)* Every override is recorded — look below in the **Decision Audit Trail**. Every action on every case is timestamped with the actor. That's the defensibility layer — when a regulator asks what we saw, when we saw it, and who decided what, we can show them.
-
-On the right, **bias monitoring**. The indicator compares high-risk rates across jurisdictions. The pill goes amber or red if the spread exceeds thresholds — a governance check built into the interface itself, not a quarterly audit report.
+An examiner can override the supervisory risk score with a rationale. The audit trail records the action, timestamp, actor, and details. The output is not an investigative handoff by default; it is a documented supervisory judgment, request for additional review, escalation, or no-finding closure.
 
 ---
 
-## Tab 6 — Enterprise Deployment
+## Tab 6 - Enterprise Deployment
 
 *(Click Enterprise Deployment, briefly.)*
 
-The last tab is architectural. **Six core capabilities** along the left — ingestion, feature engineering, detection, scoring, governance, DevSecOps. **Five mission modules** on the right — crypto intelligence, sanctions evasion, typology-specific detection packs, workflow customization, model validation. The connector lines show which capabilities each module consumes.
+The final tab shows why this can be adapted quickly. The backbone stays stable: ingestion, feature engineering, examiner testing, supervisory prioritization, governance, audit, and model lifecycle management.
 
-This is how you productize the platform: the backbone underneath stays stable; the modules on top evolve with the mission.
+The modules on the right are configurable supervisory lenses: digital asset supervision, SAR/CTR reporting quality, transaction testing presets, examiner workflow configuration, and model governance.
 
 ---
 
 ## Close
 
-So: **six tabs, one dataset, one graph**. From billions of signals at the top of the funnel to ten analyst-ready cases at the bottom — every tab pivoting off the same population. Changing a filter on one tab moves the whole surface. Every decision is timestamped. And the feedback loop from the analyst's keyboard back to the detection layer means the platform gets smarter with every case that's worked.
+The takeaway is simple: this is not a production system and it is not replacing examiners. It is a configurable micro-pilot that shows how bank source data, SAR/CTR reporting quality, transaction testing, risk sensing, and auditability can be brought into one examiner-facing workflow.
 
-Happy to take questions.
+For the first OCC conversation, the strongest message is speed and relevance: Guidehouse can take an existing capability, apply an OCC supervisory lens, and show a working evidence trail without a long build cycle.
