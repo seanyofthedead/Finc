@@ -821,6 +821,33 @@
       indicatorCell("Ownership Depth", d.beneficialOwnershipNetworkScore, "Beneficial-ownership network depth across linked counterparties");
   }
 
+  // Hydrate every [data-copy] node from the centralized copy file so all
+  // user-facing HITL wording stays editable in js/copy.js alone.
+  function applyCentralizedCopy() {
+    if (!window.FinCENCopy) return;
+    Array.from(document.querySelectorAll("[data-copy]")).forEach((node) => {
+      const key = node.getAttribute("data-copy");
+      if (typeof window.FinCENCopy[key] === "string") {
+        node.textContent = window.FinCENCopy[key];
+      }
+    });
+  }
+
+  function renderProposedNextSteps(c) {
+    const list = document.getElementById("proposed-next-steps");
+    if (!list || !window.FinCENNextSteps || !window.FinCENCopy) return;
+    const feature = engine.getDerivedFeatures().find((f) => f.entityId === c.entityId);
+    const base = data.flaggedCases.find((x) => x.caseId === c.caseId);
+    const record = {
+      derived: feature ? feature.derived : {},
+      regulatoryReview: base ? base.regulatoryReview : {}
+    };
+    const keys = window.FinCENNextSteps.suggest(record);
+    list.innerHTML = keys
+      .map((key) => "<li>" + window.FinCENCopy.NEXT_STEPS[key] + "</li>")
+      .join("");
+  }
+
   function renderWorkspaceCase() {
     const routingResults = engine.getRouting().results;
     const c = routingResults.find((x) => x.caseId === appState.selectedWorkspaceCase) || routingResults[0];
@@ -830,6 +857,7 @@
     appState.selectedWorkspaceCase = c.caseId;
     ui.overrideScore.value = c.riskScore;
     renderCaseIndicators(c);
+    renderProposedNextSteps(c);
 
     const base = data.flaggedCases.find((x) => x.caseId === c.caseId);
     const entity = data.entities.find((e) => e.id === c.entityId);
@@ -1289,6 +1317,7 @@
   }
 
   function boot() {
+    applyCentralizedCopy();
     bindNavigation();
     bindPolicyControls();
     bindWorkspaceActions();
