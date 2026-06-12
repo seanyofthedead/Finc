@@ -38,7 +38,6 @@
 
       <nav class="tab-nav" id="tab-nav">
         <button class="tab-btn active" data-screen="screen-pipeline"><span class="tab-icon" data-icon="pipeline"></span><span>Data Pipeline</span></button>
-        <button class="tab-btn" data-screen="screen-signals"><span class="tab-icon" data-icon="signals"></span><span>Signal Engineering</span></button>
         <button class="tab-btn" data-screen="screen-analytics"><span class="tab-icon" data-icon="analytics"></span><span>Transaction Testing</span></button>
         <button class="tab-btn" data-screen="screen-triage"><span class="tab-icon" data-icon="triage"></span><span>Supervisory Prioritization</span></button>
         <button class="tab-btn" data-screen="screen-workspace"><span class="tab-icon" data-icon="workspace"></span><span>Examiner Workspace</span></button>
@@ -144,79 +143,9 @@
           </div>
         </section>
 
-        <section class="screen" id="screen-signals">
-          <header class="section-masthead">
-            <p class="kicker mono"><span class="kicker-num">02</span> <span class="kicker-rule"></span> Signal Engineering</p>
-            <h2 class="display-head">Raw events, distilled into explainable features.</h2>
-            <p class="section-lede">Transaction velocity, jurisdictional exposure, beneficial-ownership depth, peer-group deviation, and cross-border flags are converted into examiner-aligned indicators, with review subjects audit-trailed back to source data and SAR/CTR reporting evidence.</p>
-          </header>
-          <div class="layout-grid cols-2 signals-grid">
-            <div class="card">
-              <h3>Derived Signal Table</h3>
-              <div class="signal-controls">
-                <input type="search" id="signal-search" class="signal-search" placeholder="Search entity name or ID..." aria-label="Search derived signal table" autocomplete="off" />
-                <span class="signal-result-count mono" id="signal-result-count"></span>
-              </div>
-              <div class="signal-table-wrapper">
-                <table class="signal-table">
-                  <thead>
-                    <tr>
-                      <th role="columnheader" tabindex="0" aria-sort="none" data-sort-col="entityName" class="signal-sortable">Entity</th>
-                      <th role="columnheader" tabindex="0" aria-sort="none" data-sort-col="transactionVelocityScore" class="signal-sortable">
-                        <span class="th-label">Velocity <small class="th-unit">(tx/day)</small></span>
-                        <span class="th-info" tabindex="0" data-icon="info" data-icon-size="12" title="Velocity = this entity's transactions per day, averaged across its active window (first tx &#8594; last tx). Higher = more frequent activity."></span>
-                      </th>
-                      <th role="columnheader" tabindex="0" aria-sort="none" data-sort-col="jurisdictionRiskScore" class="signal-sortable">Jurisdiction</th>
-                      <th role="columnheader" tabindex="0" aria-sort="none" data-sort-col="beneficialOwnershipNetworkScore" class="signal-sortable">Ownership</th>
-                      <th role="columnheader" tabindex="0" aria-sort="none" data-sort-col="peerGroupDeviation" class="signal-sortable">
-                        <span class="th-label">Peer Dev <small class="th-unit">(mean &#963;)</small></span>
-                        <span class="th-info" tabindex="0" data-icon="info" data-icon-size="12" title="Peer Deviation = per-window, (entity tx count &minus; peer-cohort median) / peer-cohort MAD. This cell shows the mean across all windows &mdash; the sparkline on the right plots each window. Cohort = same kind (e.g. shell_company); falls back to all entities if the kind cohort is degenerate. 0 = at peer median; +2&#963; = well above peers; &#8722;2&#963; = well below."></span>
-                      </th>
-                      <th>Typology</th>
-                      <th>Cross-Border</th>
-                    </tr>
-                  </thead>
-                  <tbody id="feature-table-body"></tbody>
-                </table>
-              </div>
-            </div>
-            <div class="card">
-              <h3>Selected Entity Details</h3>
-              <div id="feature-detail">Select an entity row to inspect raw inputs, derived features, and enrichment sources.</div>
-              <div class="spacer-md"></div>
-              <div class="sparkline-block">
-                <div class="sparkline-header">
-                  <h4>Velocity</h4>
-                  <span class="sparkline-badge mono" id="velocity-sparkline-unit"></span>
-                </div>
-                <p class="sparkline-definition" id="velocity-sparkline-definition">Transactions per bucket across the full observed window. Taller = more activity in that window.</p>
-                <div class="sparkline-wrap">
-                  <canvas class="mini-canvas" id="velocity-sparkline"></canvas>
-                  <div class="sparkline-tooltip" id="velocity-sparkline-tooltip" role="status" aria-live="polite"></div>
-                </div>
-                <p class="sparkline-axis mono"><span id="velocity-sparkline-xstart"></span><span>&rarr;</span><span id="velocity-sparkline-xend"></span></p>
-                <p class="sparkline-caption mono" id="velocity-sparkline-caption"></p>
-              </div>
-              <div class="sparkline-block">
-                <div class="sparkline-header">
-                  <h4>Peer Deviation</h4>
-                  <span class="sparkline-badge mono" id="deviation-sparkline-unit"></span>
-                </div>
-                <p class="sparkline-definition" id="deviation-sparkline-definition">Distance from the peer-cohort median in robust-MAD (&#963;-like) units. Zero = at the median; dashed hairline marks zero.</p>
-                <div class="sparkline-wrap">
-                  <canvas class="mini-canvas" id="deviation-sparkline"></canvas>
-                  <div class="sparkline-tooltip" id="deviation-sparkline-tooltip" role="status" aria-live="polite"></div>
-                </div>
-                <p class="sparkline-axis mono"><span id="deviation-sparkline-xstart"></span><span>&rarr;</span><span id="deviation-sparkline-xend"></span></p>
-                <p class="sparkline-caption mono" id="deviation-sparkline-caption"></p>
-              </div>
-            </div>
-          </div>
-        </section>
-
         <section class="screen" id="screen-analytics">
           <header class="section-masthead">
-            <p class="kicker mono"><span class="kicker-num">03</span> <span class="kicker-rule"></span> Transaction Testing</p>
+            <p class="kicker mono"><span class="kicker-num">02</span> <span class="kicker-rule"></span> Transaction Testing</p>
             <h2 class="display-head">Examiner testing patterns, made legible.</h2>
             <p class="section-lede">The evidence graph compresses heterogeneous bank activity into patterns an examiner can review quickly — complex ownership chains, digital asset exposure, incomplete counterparty information, and SAR/CTR reporting exceptions — each with transparent rationale.</p>
           </header>
@@ -265,7 +194,7 @@
 
         <section class="screen" id="screen-triage">
           <header class="section-masthead">
-            <p class="kicker mono"><span class="kicker-num">04</span> <span class="kicker-rule"></span> Supervisory Prioritization</p>
+            <p class="kicker mono"><span class="kicker-num">03</span> <span class="kicker-rule"></span> Supervisory Prioritization</p>
             <h2 class="display-head">Examiner thresholds govern every review path.</h2>
             <p class="section-lede">Deterministic rules route each exception toward supervisory escalation, additional review, examiner review, or monitored closure. Thresholds are adjustable in real time; the rationale is recorded with every review action.</p>
           </header>
@@ -308,7 +237,7 @@
 
         <section class="screen" id="screen-workspace">
           <header class="section-masthead">
-            <p class="kicker mono"><span class="kicker-num">05</span> <span class="kicker-rule"></span> Examiner Workspace</p>
+            <p class="kicker mono"><span class="kicker-num">04</span> <span class="kicker-rule"></span> Examiner Workspace</p>
             <h2 class="display-head">Evidence in, decision out, audit always on.</h2>
             <p class="section-lede">Entity profile, model explanation, transaction evidence, governed override, and reporting-lineage checks — the examiner surface where a supervisory judgment becomes a defensible, timestamped record.</p>
           </header>
@@ -320,6 +249,9 @@
               <div class="spacer-sm"></div>
               <label for="workspace-case-select">Exception</label>
               <select id="workspace-case-select"></select>
+              <div class="spacer-sm"></div>
+              <h4 class="workspace-section-title">FFIEC-Aligned Case Indicators</h4>
+              <div class="evidence-grid" id="case-indicators"></div>
               <div class="spacer-sm"></div>
               <div class="evidence-grid" id="evidence-grid"></div>
               <div class="spacer-lg"></div>
@@ -374,7 +306,7 @@
 
         <section class="screen" id="screen-enterprise">
           <header class="section-masthead">
-            <p class="kicker mono"><span class="kicker-num">06</span> <span class="kicker-rule"></span> Enterprise Deployment</p>
+            <p class="kicker mono"><span class="kicker-num">05</span> <span class="kicker-rule"></span> Enterprise Deployment</p>
             <h2 class="display-head">One backbone. Many supervisory lenses.</h2>
             <p class="section-lede">Ingestion, feature engineering, examiner testing, scoring, governance, lifecycle — shared infrastructure that each FFIEC-aligned supervisory module inherits. Configure the exam lens; keep the platform.</p>
           </header>
@@ -420,7 +352,6 @@
     <script src="js/entity-panel.js"></script>
     <script src="js/legend.js"></script>
     <script src="js/graph-interactions.js"></script>
-    <script src="js/signal-table.js"></script>
     <script src="js/app.js"></script>
   </body>
 </html>

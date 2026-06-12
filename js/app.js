@@ -23,25 +23,6 @@
     pipelineGraphCanvas: document.getElementById("pipeline-graph-canvas"),
     lineagePanel: document.getElementById("lineage-panel"),
 
-    featureTableBody: document.getElementById("feature-table-body"),
-    featureDetail: document.getElementById("feature-detail"),
-    velocitySparkline: document.getElementById("velocity-sparkline"),
-    deviationSparkline: document.getElementById("deviation-sparkline"),
-    velocitySparklineCaption: document.getElementById("velocity-sparkline-caption"),
-    deviationSparklineCaption: document.getElementById("deviation-sparkline-caption"),
-    velocitySparklineUnit: document.getElementById("velocity-sparkline-unit"),
-    deviationSparklineUnit: document.getElementById("deviation-sparkline-unit"),
-    velocitySparklineXstart: document.getElementById("velocity-sparkline-xstart"),
-    velocitySparklineXend: document.getElementById("velocity-sparkline-xend"),
-    deviationSparklineXstart: document.getElementById("deviation-sparkline-xstart"),
-    deviationSparklineXend: document.getElementById("deviation-sparkline-xend"),
-    velocitySparklineTooltip: document.getElementById("velocity-sparkline-tooltip"),
-    deviationSparklineTooltip: document.getElementById("deviation-sparkline-tooltip"),
-    signalSearch: document.getElementById("signal-search"),
-    signalResultCount: document.getElementById("signal-result-count"),
-    signalTableWrapper: document.querySelector(".signal-table-wrapper"),
-    signalSortableHeaders: document.querySelectorAll(".signal-sortable"),
-
     analyticsGraphCanvas: document.getElementById("analytics-graph-canvas"),
     heatmapContainer: document.getElementById("heatmap-container"),
     testingPresets: document.getElementById("testing-presets"),
@@ -65,6 +46,7 @@
 
     workspaceCaseSearch: document.getElementById("workspace-case-search"),
     workspaceCaseSelect: document.getElementById("workspace-case-select"),
+    caseIndicators: document.getElementById("case-indicators"),
     evidenceGrid: document.getElementById("evidence-grid"),
     overrideScore: document.getElementById("override-score"),
     overrideRationale: document.getElementById("override-rationale"),
@@ -102,9 +84,6 @@
     activeScreen: "screen-pipeline",
     batchProgress: 0,
     streamCount: 0,
-    selectedFeatureEntity: null,
-    signalSearch: "",
-    signalSort: { column: null, direction: null },
     workspaceSearch: "",
     routingSearch: "",
     caseCardsSearch: "",
@@ -168,13 +147,12 @@
   const guideSteps = [
     { screen: "screen-pipeline", focus: "#source-grid", title: "1. Bank Data Ingestion", body: "Review SAR, CTR, customer, account, funds transfer, and digital asset feeds with batch and streaming modes." },
     { screen: "screen-pipeline", focus: "#entity-resolution-card", title: "2. Entity Resolution", body: "Duplicate source records merge into canonical customers, accounts, and counterparties before examiner testing." },
-    { screen: "screen-signals", focus: "#feature-table-body", title: "3. FFIEC-Aligned Signals", body: "Feature engineering creates reusable velocity, jurisdiction, ownership, reporting quality, and deviation indicators." },
-    { screen: "screen-analytics", focus: "#analytics-graph-canvas", title: "4. Transaction Testing", body: "Graph and heatmap compress heterogeneous activity into examiner-relevant testing patterns." },
-    { screen: "screen-triage", focus: "#decision-path", title: "5. Supervisory Routing", body: "Deterministic rules apply score and confidence thresholds to produce examiner review paths." },
-    { screen: "screen-triage", focus: "#high-risk-slider", title: "6. Threshold Adjustment", body: "Policy sliders immediately re-route exceptions for what-if governance analysis." },
-    { screen: "screen-workspace", focus: "#evidence-grid", title: "7. Examiner Review", body: "Examiner inspects evidence, model explanations, SAR/CTR lineage, and can apply governed overrides." },
-    { screen: "screen-workspace", focus: "#audit-log", title: "8. Audit Trail", body: "Every override and review action is timestamped for defensible examination records." },
-    { screen: "screen-enterprise", focus: "#mission-modules", title: "9. Enterprise Deployment & Expansion", body: "Configurable supervisory modules are layered on a shared enterprise platform backbone." }
+    { screen: "screen-analytics", focus: "#analytics-graph-canvas", title: "3. Transaction Testing", body: "Graph and heatmap compress heterogeneous activity into examiner-relevant testing patterns." },
+    { screen: "screen-triage", focus: "#decision-path", title: "4. Supervisory Routing", body: "Deterministic rules apply score and confidence thresholds to produce examiner review paths." },
+    { screen: "screen-triage", focus: "#high-risk-slider", title: "5. Threshold Adjustment", body: "Policy sliders immediately re-route exceptions for what-if governance analysis." },
+    { screen: "screen-workspace", focus: "#case-indicators", title: "6. Examiner Review", body: "Examiner reviews per-case FFIEC-aligned indicators, evidence, model explanations, and SAR/CTR lineage, and can apply governed overrides." },
+    { screen: "screen-workspace", focus: "#audit-log", title: "7. Audit Trail", body: "Every override and review action is timestamped for defensible examination records." },
+    { screen: "screen-enterprise", focus: "#mission-modules", title: "8. Enterprise Deployment & Expansion", body: "Configurable supervisory modules are layered on a shared enterprise platform backbone." }
   ];
 
   function setScreen(screenId) {
@@ -365,229 +343,6 @@
 
   }
 
-  function renderSignalEngineering() {
-    const rawFeatures = engine.getDerivedFeatures();
-    const searched = window.FinCENSignalTable.filterFeatures(rawFeatures, appState.signalSearch);
-    const sortSpec = appState.signalSort;
-    const hasExplicitSort = sortSpec && sortSpec.column && sortSpec.direction;
-    const displayed = hasExplicitSort
-      ? window.FinCENSignalTable.sortFeatures(searched, sortSpec)
-      : window.FinCENSignalTable.compoundDefaultSort(searched);
-
-    ui.featureTableBody.innerHTML = "";
-
-    if (ui.signalResultCount) {
-      ui.signalResultCount.textContent =
-        "Showing " + displayed.length + " of " + rawFeatures.length + " rows";
-    }
-
-    if (displayed.length === 0) {
-      const trEmpty = document.createElement("tr");
-      const tdEmpty = document.createElement("td");
-      tdEmpty.colSpan = 7;
-      tdEmpty.className = "signal-empty-state-cell";
-      const isSearch = Boolean(appState.signalSearch);
-      tdEmpty.innerHTML = emptyState(
-        isSearch
-          ? { icon: "search", title: "No matches for \"" + appState.signalSearch + "\"", body: "Clear the search or try an entity name fragment.", hint: "" }
-          : { icon: "search", title: "No entities match this testing pattern", body: "Pick a different testing pattern above, or select \"All\" to see the full graph.", hint: "" }
-      );
-      trEmpty.appendChild(tdEmpty);
-      ui.featureTableBody.appendChild(trEmpty);
-      appState.selectedFeatureEntity = null;
-      if (window.FinCENIcons) window.FinCENIcons.hydrate(ui.featureTableBody);
-      renderSignalDetail(displayed);
-      return;
-    }
-
-    const renderTypologyCell = (f) => {
-      if (!f.typologyTag) return "<td></td>";
-      return "<td><span class='pill " + typologyPillClass(f.typologyTag) + "'>" + displayTypology(f.typologyTag) + "</span></td>";
-    };
-
-    const provenanceTitle = "Exception-enriched: formula includes supervisory risk score and testing-pattern factor.";
-    const provIcon = (enriched) => {
-      if (!enriched) return "";
-      const iconHtml = window.FinCENIcons ? window.FinCENIcons.render("info", { size: 12 }) : "ⓘ";
-      return " <span class='signal-provenance-icon' title='" + provenanceTitle + "'>" + iconHtml + "</span>";
-    };
-
-    displayed.forEach((f) => {
-      const series = engine.getSignalSeriesByEntity(f.entityId);
-      const txPerDay = series ? series.summary.txPerDay : 0;
-      const peerDevMean = series ? series.summary.peerDeviationMean : 0;
-      const tr = document.createElement("tr");
-      if (f._caseEnriched) tr.className = "signal-row--case-enriched";
-      tr.setAttribute("data-entity-id", f.entityId);
-      const caseChip = f._caseEnriched
-        ? "<span class='signal-case-chip mono'>" + f.caseId + "</span> "
-        : "";
-      tr.innerHTML =
-        "<td>" + caseChip + f.entityName + "</td>" +
-        "<td>" + txPerDay.toFixed(2) + " tx/day" + provIcon(f._caseEnriched) + "</td>" +
-        "<td>" + f.derived.jurisdictionRiskScore + provIcon(f._caseEnriched) + "</td>" +
-        "<td>" + f.derived.beneficialOwnershipNetworkScore + provIcon(f._caseEnriched) + "</td>" +
-        "<td>" + formatSigned(peerDevMean, 1) + "\u03c3" + provIcon(f._caseEnriched) + "</td>" +
-        renderTypologyCell(f) +
-        "<td>" + (f.derived.crossBorderExposureFlag ? "Yes" : "No") + "</td>";
-      tr.addEventListener("click", () => {
-        appState.selectedFeatureEntity = f.entityId;
-        Array.from(ui.featureTableBody.querySelectorAll("tr")).forEach((row) => row.classList.remove("selected"));
-        tr.classList.add("selected");
-        renderSignalDetail(displayed);
-      });
-      ui.featureTableBody.appendChild(tr);
-    });
-
-    appState.selectedFeatureEntity = window.FinCENSignalTable.chooseDefaultSelection(
-      displayed,
-      appState.selectedFeatureEntity
-    );
-
-    if (appState.selectedFeatureEntity) {
-      const selectedRow = ui.featureTableBody.querySelector(
-        "tr[data-entity-id=\"" + appState.selectedFeatureEntity + "\"]"
-      );
-      if (selectedRow) selectedRow.classList.add("selected");
-    }
-    if (window.FinCENIcons) window.FinCENIcons.hydrate(ui.featureTableBody);
-    renderSignalDetail(displayed);
-  }
-
-  function renderSignalDetail(precomputedFeatures) {
-    // Flicker guard: capture the selection at the top of the render pass. If
-    // the user clicks another row mid-render, bail on the second-half draws.
-    const currentEntity = appState.selectedFeatureEntity;
-
-    if (!currentEntity) {
-      ui.featureDetail.innerHTML = "<p class='muted'>Select a row to inspect raw inputs, derived features, and enrichment sources.</p>";
-      return;
-    }
-
-    const features = precomputedFeatures || engine.getDerivedFeatures();
-    const detail = features.find((f) => f.entityId === currentEntity);
-    if (!detail) {
-      ui.featureDetail.innerHTML = "<p class='muted'>Selected entity is not in the current view.</p>";
-      return;
-    }
-
-    const series = engine.getSignalSeriesByEntity(currentEntity);
-
-    const rows = [];
-    if (detail._caseEnriched) {
-      rows.push("<div class='metric-row'><span class='muted'>Exception</span><span>" + detail.caseId + "</span></div>");
-    }
-    rows.push("<div class='metric-row'><span class='muted'>Entity</span><span>" + detail.entityName + "</span></div>");
-    rows.push("<div class='metric-row'><span class='muted'>Kind</span><span>" + (detail.entityKind || "\u2014") + "</span></div>");
-    rows.push("<div class='metric-row'><span class='muted'>Jurisdiction</span><span>" + (detail.jurisdiction || "\u2014") + "</span></div>");
-    if (detail._caseEnriched) {
-      rows.push("<div class='metric-row'><span class='muted'>Testing Pattern</span><span>" + displayTypology(detail.typologyTag) + "</span></div>");
-      rows.push("<div class='metric-row'><span class='muted'>Raw Inputs</span><span>" + (detail.rawInputs || []).map(displayText).join("; ") + "</span></div>");
-    }
-    if (series) {
-      const txPerDay = series.summary.txPerDay.toFixed(2);
-      const peerDevMean = formatSigned(series.summary.peerDeviationMean, 2);
-      const peerDevPeak = series.summary.peerDeviationPeakAbs.toFixed(2);
-      rows.push("<div class='metric-row'><span class='muted'>Velocity</span><span>" + txPerDay + " tx/day</span></div>");
-      rows.push("<div class='metric-row'><span class='muted'>Peer Deviation</span><span>mean " + peerDevMean + "\u03c3 \u2022 peak " + peerDevPeak + "\u03c3 (cohort: " + series.peerDeviation.peerGroup + ")</span></div>");
-    } else {
-      rows.push("<div class='metric-row'><span class='muted'>Velocity</span><span>No signal data available for this entity.</span></div>");
-    }
-    if (detail._caseEnriched) {
-      rows.push("<div class='metric-row'><span class='muted'>Enrichment</span><span>" + (detail.enrichmentSources || []).map(displayText).join(", ") + "</span></div>");
-    }
-    ui.featureDetail.innerHTML = rows.join("");
-
-    if (appState.selectedFeatureEntity !== currentEntity) return;
-    if (!series) {
-      [ui.velocitySparkline, ui.deviationSparkline].forEach((c) => {
-        if (c && c.getContext) c.getContext('2d').clearRect(0, 0, c.width, c.height);
-      });
-      return;
-    }
-
-    const firstLabel = series.bucketLabels[0];
-    const lastLabel = series.bucketLabels[series.bucketLabels.length - 1];
-    const xRange = firstLabel + " \u2192 " + lastLabel;
-    const vPeak = Math.max.apply(null, series.velocity.values.concat([0]));
-    const dAbsPeak = Math.max.apply(null, series.peerDeviation.values.map(Math.abs).concat([0]));
-
-    if (appState.selectedFeatureEntity !== currentEntity) return;
-    window.FinCENViz.drawSparkline(ui.velocitySparkline, series.velocity.values, {
-      yLabel: series.velocity.unit,
-      xLabel: xRange,
-      pointLabels: series.bucketLabels,
-      ariaLabel: detail.entityName + " transaction velocity across " + series.bucketLabels.length + " windows " + firstLabel + " to " + lastLabel + "; peak " + vPeak + " " + series.velocity.unit + "; total tx/day " + series.summary.txPerDay.toFixed(2)
-    });
-    if (appState.selectedFeatureEntity !== currentEntity) return;
-    window.FinCENViz.drawSparkline(ui.deviationSparkline, series.peerDeviation.values, {
-      yLabel: series.peerDeviation.unit,
-      xLabel: xRange,
-      pointLabels: series.bucketLabels,
-      showZeroLine: true,
-      ariaLabel: detail.entityName + " peer deviation versus cohort " + series.peerDeviation.peerGroup + " across " + series.bucketLabels.length + " windows " + firstLabel + " to " + lastLabel + "; maximum absolute deviation " + dAbsPeak.toFixed(2) + " " + series.peerDeviation.unit
-    });
-
-    if (ui.velocitySparklineUnit) ui.velocitySparklineUnit.textContent = series.velocity.unit;
-    if (ui.deviationSparklineUnit) ui.deviationSparklineUnit.textContent = series.peerDeviation.unit;
-    if (ui.velocitySparklineXstart) ui.velocitySparklineXstart.textContent = firstLabel;
-    if (ui.velocitySparklineXend) ui.velocitySparklineXend.textContent = lastLabel;
-    if (ui.deviationSparklineXstart) ui.deviationSparklineXstart.textContent = firstLabel;
-    if (ui.deviationSparklineXend) ui.deviationSparklineXend.textContent = lastLabel;
-    if (ui.velocitySparklineCaption) {
-      ui.velocitySparklineCaption.textContent = "Peak: " + vPeak + " tx in window \u2022 " + series.bucketLabels.length + " windows \u00d7 " + series.bucketDays + " days";
-    }
-    if (ui.deviationSparklineCaption) {
-      ui.deviationSparklineCaption.textContent = "Cohort: " + series.peerDeviation.peerGroup + " \u2022 max |deviation| " + dAbsPeak.toFixed(2) + "\u03c3 \u2022 " + series.bucketLabels.length + " windows";
-    }
-
-    attachSparklineHover(ui.velocitySparkline, ui.velocitySparklineTooltip, series.velocity.unit, false);
-    attachSparklineHover(ui.deviationSparkline, ui.deviationSparklineTooltip, series.peerDeviation.unit, true);
-  }
-
-  function attachSparklineHover(canvas, tooltipEl, unit, isSigned) {
-    if (!canvas || !tooltipEl) return;
-    if (canvas.__hoverAttached) return;
-    canvas.__hoverAttached = true;
-
-    const onMove = (ev) => {
-      const points = canvas.__sparklinePoints;
-      const meta = canvas.__sparklineMeta || {};
-      if (!points || !points.length) {
-        tooltipEl.style.opacity = "0";
-        return;
-      }
-      const rect = canvas.getBoundingClientRect();
-      const cx = ev.clientX - rect.left;
-      const cy = ev.clientY - rect.top;
-      let nearest = points[0];
-      let bestDx = Math.abs(points[0].x - cx);
-      for (let i = 1; i < points.length; i += 1) {
-        const dx = Math.abs(points[i].x - cx);
-        if (dx < bestDx) { bestDx = dx; nearest = points[i]; }
-      }
-      const idx = points.indexOf(nearest);
-      const label = (meta.labels && meta.labels[idx]) ? meta.labels[idx] : ("Window " + (idx + 1));
-      const v = nearest.value;
-      const valueStr = isSigned
-        ? (v > 0 ? "+" : (v < 0 ? "" : "")) + v.toFixed(2)
-        : String(v);
-      tooltipEl.innerHTML =
-        "<strong>" + valueStr + "</strong> " + unit +
-        "<span class='sparkline-tooltip-sub'>" + label + "</span>";
-      tooltipEl.style.left = Math.max(0, Math.min(rect.width - 120, nearest.x - 60)) + "px";
-      tooltipEl.style.top = Math.max(-34, nearest.y - 40) + "px";
-      tooltipEl.style.opacity = "1";
-      canvas.style.cursor = "crosshair";
-    };
-    const onLeave = () => {
-      tooltipEl.style.opacity = "0";
-      canvas.style.cursor = "";
-    };
-    canvas.addEventListener("mousemove", onMove);
-    canvas.addEventListener("mouseleave", onLeave);
-  }
-
   let analyticsGraphCache = { graph: { nodes: [], edges: [] }, risk: {}, overlay: { mixers: [], shellChains: [], disposableClusters: [], sanctionedIds: [] }, pathSource: null, hasPath: false };
   let analyticsInteractionsAttached = false;
   let pulseRafId = null;
@@ -730,10 +485,6 @@
         analyticsGraphCache.hasPath = false;
         renderAnalytics();
         renderRouting();
-        // Signal table mirrors the ER-graph population; narrow it in lockstep.
-        // Reset scroll to top so the user sees the new default-sort head.
-        renderSignalEngineering();
-        if (ui.signalTableWrapper) ui.signalTableWrapper.scrollTop = 0;
       });
       ui.typologyFilterGroup.appendChild(b);
     });
@@ -1046,6 +797,30 @@
     renderBiasIndicator();
   }
 
+  // Per-case indicator components (transaction velocity, jurisdiction
+  // exposure, ownership depth) — consolidated here from the former Signal
+  // Engineering tab, scoped to the currently selected exception.
+  function renderCaseIndicators(c) {
+    if (!ui.caseIndicators) return;
+    const entity = data.entities.find((e) => e.id === c.entityId);
+    const feature = engine.getDerivedFeatures().find((f) => f.entityId === c.entityId);
+    if (!feature) {
+      ui.caseIndicators.innerHTML = "<div class='evidence'><h4>Indicators</h4><div class='muted'>No indicator data available for this exception.</div></div>";
+      return;
+    }
+    const d = feature.derived;
+    const series = engine.getSignalSeriesByEntity(c.entityId);
+    const txPerDay = series ? series.summary.txPerDay.toFixed(2) + " tx/day" : "—";
+    const indicatorCell = (label, score, detail) =>
+      "<div class='evidence'><h4>" + label + "</h4>" +
+      "<div class='metric-row'><span class='muted'>Score</span><span class='pill " + scoreClass(score) + "'>" + score + "</span></div>" +
+      "<div class='muted'>" + detail + "</div></div>";
+    ui.caseIndicators.innerHTML =
+      indicatorCell("Transaction Velocity", d.transactionVelocityScore, "Observed activity rate: " + txPerDay) +
+      indicatorCell("Jurisdiction Exposure", d.jurisdictionRiskScore, "Jurisdiction: " + ((entity && entity.jurisdiction) || "—") + (d.crossBorderExposureFlag ? " · cross-border activity present" : "")) +
+      indicatorCell("Ownership Depth", d.beneficialOwnershipNetworkScore, "Beneficial-ownership network depth across linked counterparties");
+  }
+
   function renderWorkspaceCase() {
     const routingResults = engine.getRouting().results;
     const c = routingResults.find((x) => x.caseId === appState.selectedWorkspaceCase) || routingResults[0];
@@ -1054,6 +829,7 @@
     }
     appState.selectedWorkspaceCase = c.caseId;
     ui.overrideScore.value = c.riskScore;
+    renderCaseIndicators(c);
 
     const base = data.flaggedCases.find((x) => x.caseId === c.caseId);
     const entity = data.entities.find((e) => e.id === c.entityId);
@@ -1350,7 +1126,6 @@
 
     const screens = [
       { id: "screen-pipeline", title: "Go to Pipeline",          icon: "pipeline" },
-      { id: "screen-signals",   title: "Go to Signal Engineering", icon: "signals" },
       { id: "screen-analytics", title: "Go to Transaction Testing", icon: "analytics" },
       { id: "screen-triage",    title: "Go to Supervisory Prioritization", icon: "triage" },
       { id: "screen-workspace", title: "Go to Examiner Workspace", icon: "workspace" },
@@ -1375,10 +1150,6 @@
         icon: "triage",
         action: () => {
           engine.setTypologyFilter(t);
-          // Render Signal table BEFORE navigation so it is warm if the user
-          // later returns to that tab.
-          renderSignalEngineering();
-          if (ui.signalTableWrapper) ui.signalTableWrapper.scrollTop = 0;
           setScreen("screen-analytics");
           renderAnalytics();
           renderRouting();
@@ -1517,57 +1288,18 @@
     }
   }
 
-  function bindSignalTableControls() {
-    if (ui.signalSearch) {
-      ui.signalSearch.addEventListener("input", (ev) => {
-        appState.signalSearch = ev.target.value || "";
-        renderSignalEngineering();
-      });
-    }
-    if (ui.signalSortableHeaders) {
-      Array.from(ui.signalSortableHeaders).forEach((th) => {
-        const column = th.getAttribute("data-sort-col");
-        if (!column) return;
-        const toggle = () => {
-          const current = appState.signalSort;
-          let nextDirection;
-          if (current.column === column) {
-            nextDirection = current.direction === "asc" ? "desc" : "asc";
-          } else {
-            nextDirection = window.FinCENSignalTable.defaultColumnDirection(column);
-          }
-          appState.signalSort = { column, direction: nextDirection };
-          Array.from(ui.signalSortableHeaders).forEach((other) => {
-            other.setAttribute("aria-sort", "none");
-          });
-          th.setAttribute("aria-sort", nextDirection === "asc" ? "ascending" : "descending");
-          renderSignalEngineering();
-        };
-        th.addEventListener("click", toggle);
-        th.addEventListener("keydown", (ev) => {
-          if (ev.key === "Enter" || ev.key === " ") {
-            ev.preventDefault();
-            toggle();
-          }
-        });
-      });
-    }
-  }
-
   function boot() {
     bindNavigation();
     bindPolicyControls();
     bindWorkspaceActions();
     bindRoutingSearch();
     bindCaseCardsControls();
-    bindSignalTableControls();
     startStatusClock();
     bindGuide();
     bindGlobalKeys();
 
     renderPipeline();
     startIngestionSimulation();
-    renderSignalEngineering();
     renderAnalytics();
     renderRouting();
     renderWorkspace();
