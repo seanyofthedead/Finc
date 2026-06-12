@@ -1,5 +1,6 @@
 // Dev-only smoke check: boots the app in headless Chromium, walks every tab,
-// fails on console errors, and saves screenshots for visual review.
+// fails on console errors or on raw statistical terminology in the rendered
+// default view (MP-03 acceptance), and saves screenshots for visual review.
 // Usage: node scripts/smoke-screenshot.mjs [outDir]   (server must be on :4173)
 import { chromium } from "@playwright/test";
 import fs from "node:fs";
@@ -21,10 +22,16 @@ await page.waitForTimeout(800);
 const tabs = await page.$$eval(".tab-btn", (btns) => btns.map((b) => b.dataset.screen));
 console.log("tabs:", tabs.join(", "));
 
+// MP-03: no raw statistical terms or formulas in the rendered default view.
+const BANNED_STATS = /σ|std\s*dev|standard deviation|\bmean\b|\bMAD\b|×\s*\d|z-score/i;
+
 for (const screen of tabs) {
   await page.click(`.tab-btn[data-screen="${screen}"]`);
   await page.waitForTimeout(600);
   await page.screenshot({ path: `${outDir}/${screen}.png`, fullPage: true });
+  const text = await page.evaluate((id) => document.getElementById(id).innerText, screen);
+  const hit = text.match(BANNED_STATS);
+  if (hit) errors.push(`banned statistical term "${hit[0]}" rendered on ${screen}`);
 }
 
 if (errors.length) {

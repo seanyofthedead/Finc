@@ -810,15 +810,42 @@
     }
     const d = feature.derived;
     const series = engine.getSignalSeriesByEntity(c.entityId);
-    const txPerDay = series ? series.summary.txPerDay.toFixed(2) + " tx/day" : "—";
-    const indicatorCell = (label, score, detail) =>
-      "<div class='evidence'><h4>" + label + "</h4>" +
-      "<div class='metric-row'><span class='muted'>Score</span><span class='pill " + scoreClass(score) + "'>" + score + "</span></div>" +
-      "<div class='muted'>" + detail + "</div></div>";
+    const sentences = window.FinCENCopy.INDICATOR_BAND_SENTENCES;
+    // Default view is qualitative only (MP-03): band label + plain-language
+    // sentence. The raw scores stay computed in the engine and surface solely
+    // through the config-gated methodology expander below.
+    const indicatorCell = (label, indicatorKey, score, detail) => {
+      const band = window.FinCENIndicatorBands.bandFor(score);
+      return "<div class='evidence'><h4>" + label + "</h4>" +
+        "<div class='indicator-band'><span class='pill " + band.className + "'>" + band.label + "</span></div>" +
+        "<div class='indicator-sentence'>" + sentences[indicatorKey][band.key] + "</div>" +
+        (detail ? "<div class='muted indicator-detail'>" + detail + "</div>" : "") +
+        "</div>";
+    };
     ui.caseIndicators.innerHTML =
-      indicatorCell("Transaction Velocity", d.transactionVelocityScore, "Observed activity rate: " + txPerDay) +
-      indicatorCell("Jurisdiction Exposure", d.jurisdictionRiskScore, "Jurisdiction: " + ((entity && entity.jurisdiction) || "—") + (d.crossBorderExposureFlag ? " · cross-border activity present" : "")) +
-      indicatorCell("Ownership Depth", d.beneficialOwnershipNetworkScore, "Beneficial-ownership network depth across linked counterparties");
+      indicatorCell("Transaction Velocity", "velocity", d.transactionVelocityScore, "") +
+      indicatorCell("Jurisdiction Exposure", "jurisdiction", d.jurisdictionRiskScore, "Jurisdiction: " + ((entity && entity.jurisdiction) || "—") + (d.crossBorderExposureFlag ? " · cross-border activity present" : "")) +
+      indicatorCell("Ownership Depth", "ownership", d.beneficialOwnershipNetworkScore, "") +
+      renderMethodologyDetail(d, series);
+  }
+
+  // MP-08 candidate: collapsed methodology expander exposing the underlying
+  // statistics. Ships hidden behind FinCENConfig.showMethodologyDetail so the
+  // Friday demo audience can decide whether the math is reachable at all.
+  function renderMethodologyDetail(derived, series) {
+    if (!window.FinCENConfig || !window.FinCENConfig.showMethodologyDetail) return "";
+    const s = series ? series.summary : null;
+    const rows = [
+      ["Velocity score", derived.transactionVelocityScore],
+      ["Jurisdiction score", derived.jurisdictionRiskScore],
+      ["Ownership score", derived.beneficialOwnershipNetworkScore],
+      ["Observed tx/day", s ? s.txPerDay : "—"],
+      ["Peer median tx/day", s ? s.peerMedianTxPerDay : "—"],
+      ["Peer deviation (z)", s ? s.peerZ : "—"]
+    ];
+    return "<details class='methodology-detail'><summary>Methodology</summary>" +
+      rows.map((r) => "<div class='metric-row'><span class='muted'>" + r[0] + "</span><span class='mono'>" + r[1] + "</span></div>").join("") +
+      "</details>";
   }
 
   // Hydrate every [data-copy] node from the centralized copy file so all
