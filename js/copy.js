@@ -22,6 +22,34 @@
     STAGE_NEXT_STEPS: "Proposed Next Steps",
     STAGE_DECISION: "Examiner Decision",
 
+    // Qualitative band labels for indicator scores (see js/indicator-bands.js;
+    // cut points live in js/config.js).
+    BAND_LABELS: {
+      high: "Substantially above typical activity",
+      elevated: "Elevated vs. baseline",
+      typical: "Within typical range"
+    },
+
+    // One plain-language sentence per indicator per band — the default-view
+    // replacement for raw statistical readouts.
+    INDICATOR_BAND_SENTENCES: {
+      velocity: {
+        high: "Transaction activity is substantially more frequent than this entity's expected baseline.",
+        elevated: "Transaction activity is somewhat more frequent than this entity's expected baseline.",
+        typical: "Transaction frequency is consistent with this entity's expected baseline."
+      },
+      jurisdiction: {
+        high: "Activity is concentrated in jurisdictions that carry substantially heightened supervisory attention.",
+        elevated: "Some activity touches jurisdictions that carry heightened supervisory attention.",
+        typical: "Jurisdictional exposure is consistent with routine activity for this entity type."
+      },
+      ownership: {
+        high: "The beneficial-ownership structure is substantially more layered than is typical for this entity type.",
+        elevated: "The beneficial-ownership structure shows more layering than is typical for this entity type.",
+        typical: "The beneficial-ownership structure is consistent with this entity type."
+      }
+    },
+
     // Proposed next-step suggestions, keyed by rule id (see js/next-steps.js).
     NEXT_STEPS: {
       expandSample:
