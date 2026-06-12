@@ -2,6 +2,11 @@
 
 *Estimated speaking time: 5-6 minutes. Stage directions in italics. This script is for the OCC retargeted demo and should be used instead of the original FinCEN/law-enforcement voice track.*
 
+> **Note:** For the Friday executive demo, use the linear script in
+> [`docs/demo-script.md`](../demo-script.md) (dashboard → lineage → case
+> selection → findings → proposed next steps → disposition). This walkthrough
+> covers every tab and stays useful for deeper sessions.
+
 ---
 
 ## Opening - KPI strip visible at the top
@@ -28,21 +33,7 @@ At the bottom, the graph preview shows how the feeds become one evidence graph. 
 
 ---
 
-## Tab 2 - Signal Engineering
-
-*(Click Signal Engineering.)*
-
-The signal layer converts raw activity into examiner-aligned indicators: transaction velocity, jurisdiction exposure, ownership depth, peer deviation, and cross-border activity. These indicators can support scoping and sample selection, but they do not replace examiner judgment.
-
-The table keeps the same population as the graph. The surfaced exceptions rise to the top because they need review. Click an exception row and the detail panel shows the underlying rationale, raw inputs, enrichment sources, and trend lines. That is the key OCC story: the signal is inspectable and tied back to evidence.
-
-*(Type "nils" in the search input, then clear it.)*
-
-Search and sort are practical examiner tools. They let a user narrow the population by entity, exception ID, or indicator without changing the underlying source data.
-
----
-
-## Tab 3 - Transaction Testing
+## Tab 2 - Transaction Testing
 
 *(Click Transaction Testing.)*
 
@@ -58,7 +49,7 @@ Below the graph, the exception cards summarize the testing pattern, entity, conf
 
 ---
 
-## Tab 4 - Supervisory Prioritization
+## Tab 3 - Supervisory Prioritization
 
 *(Click Supervisory Prioritization.)*
 
@@ -72,11 +63,15 @@ This is useful for an OCC executive conversation because it shows both risk sens
 
 ---
 
-## Tab 5 - Examiner Workspace
+## Tab 4 - Examiner Workspace
 
 *(Click Examiner Workspace.)*
 
-This is where the demo becomes concrete. Select an exception and the workspace shows entity profile, testing rationale, FFIEC-aligned indicators, SAR/CTR validation, reporting lineage, examiner disposition, and supporting transactions.
+This is where the demo becomes concrete. Select an exception and the case view reads top to bottom in three labeled stages: A Findings, B Proposed Next Steps, C Examiner Decision — evidence, then suggestion, then human decision.
+
+Findings opens with a standing disclaimer that indicators are inputs, not conclusions. The three FFIEC-aligned indicators — transaction velocity, jurisdiction exposure, ownership depth — are expressed as plain-language qualitative bands, with the underlying math retained but not shown. Below them sit the entity profile, testing rationale, SAR/CTR validation, reporting lineage, and supporting transactions.
+
+Proposed Next Steps offers one to three rule-based, plain-language suggestions scoped to the selected case, captioned as suggestions only — the examiner determines the appropriate action.
 
 The SAR/CTR validation card is the important new OCC proof point. It shows filing type, whether required fields are complete, whether the filing is on time, and whether source records reconcile. The reporting lineage card shows the reportable trigger, due date, and filed date.
 
@@ -84,7 +79,7 @@ An examiner can override the supervisory risk score with a rationale. The audit 
 
 ---
 
-## Tab 6 - Enterprise Deployment
+## Tab 5 - Enterprise Deployment
 
 *(Click Enterprise Deployment, briefly.)*
 
