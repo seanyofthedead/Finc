@@ -249,36 +249,50 @@
               <div class="spacer-sm"></div>
               <label for="workspace-case-select">Exception</label>
               <select id="workspace-case-select"></select>
-              <div class="spacer-sm"></div>
-              <h4 class="workspace-section-title">FFIEC-Aligned Case Indicators</h4>
-              <div class="evidence-grid" id="case-indicators"></div>
-              <div class="spacer-sm"></div>
-              <div class="evidence-grid" id="evidence-grid"></div>
-              <div class="spacer-lg"></div>
-              <label for="override-score">Override Risk Score</label>
-              <input id="override-score" type="number" min="0" max="100" />
-              <div class="spacer-sm"></div>
-              <label for="override-rationale">Rationale</label>
-              <textarea id="override-rationale" rows="3" placeholder="Provide examiner rationale..."></textarea>
-              <div class="spacer-sm"></div>
-              <button class="btn accent" id="apply-override-btn">Apply Override</button>
-              <div class="spacer-sm"></div>
-              <button class="btn" id="generate-report-btn">Generate Report</button>
-              <div class="spacer-sm"></div>
-              <div class="confirm-bar" id="workspace-confirm-bar">
-                <span id="confirm-message">Confirm action?</span>
-                <div class="confirm-actions">
-                  <button class="btn" id="confirm-yes-btn">Confirm</button>
-                  <button class="btn" id="confirm-no-btn">Cancel</button>
+              <div class="spacer-md"></div>
+
+              <section class="workspace-stage" id="ws-findings" aria-labelledby="ws-findings-title">
+                <h4 class="workspace-stage-title" id="ws-findings-title"><span class="stage-letter mono">A</span> <span data-copy="STAGE_FINDINGS">Findings</span></h4>
+                <p class="hitl-disclaimer" id="indicators-disclaimer" data-copy="INDICATORS_DISCLAIMER"></p>
+                <h4 class="workspace-section-title">FFIEC-Aligned Case Indicators</h4>
+                <div class="evidence-grid" id="case-indicators"></div>
+                <div class="spacer-sm"></div>
+                <div class="evidence-grid" id="evidence-grid"></div>
+              </section>
+
+              <section class="workspace-stage" id="ws-next-steps" aria-labelledby="ws-next-steps-title">
+                <h4 class="workspace-stage-title" id="ws-next-steps-title"><span class="stage-letter mono">B</span> <span data-copy="STAGE_NEXT_STEPS">Proposed Next Steps</span></h4>
+                <ul class="next-steps-list" id="proposed-next-steps"></ul>
+                <p class="hitl-caption" id="next-steps-caption" data-copy="NEXT_STEPS_CAPTION"></p>
+              </section>
+
+              <section class="workspace-stage" id="ws-decision" aria-labelledby="ws-decision-title">
+                <h4 class="workspace-stage-title" id="ws-decision-title"><span class="stage-letter mono">C</span> <span data-copy="STAGE_DECISION">Examiner Decision</span></h4>
+                <label for="override-score">Override Risk Score</label>
+                <input id="override-score" type="number" min="0" max="100" />
+                <div class="spacer-sm"></div>
+                <label for="override-rationale">Rationale</label>
+                <textarea id="override-rationale" rows="3" placeholder="Provide examiner rationale..."></textarea>
+                <div class="spacer-sm"></div>
+                <button class="btn accent" id="apply-override-btn">Apply Override</button>
+                <div class="spacer-sm"></div>
+                <button class="btn" id="generate-report-btn">Generate Report</button>
+                <div class="spacer-sm"></div>
+                <div class="confirm-bar" id="workspace-confirm-bar">
+                  <span id="confirm-message">Confirm action?</span>
+                  <div class="confirm-actions">
+                    <button class="btn" id="confirm-yes-btn">Confirm</button>
+                    <button class="btn" id="confirm-no-btn">Cancel</button>
+                  </div>
                 </div>
-              </div>
-              <div class="spacer-sm"></div>
-              <div class="action-buttons">
-                <button class="btn" data-action="escalate_intelligence">Request Additional Review</button>
-                <button class="btn" data-action="refer_enforcement">Supervisory Escalation</button>
-                <button class="btn" data-action="return_monitoring">Return to Monitoring</button>
-                <button class="btn" data-action="close_case">Close No Finding</button>
-              </div>
+                <div class="spacer-sm"></div>
+                <div class="action-buttons">
+                  <button class="btn" data-action="escalate_intelligence">Request Additional Review</button>
+                  <button class="btn" data-action="refer_enforcement">Supervisory Escalation</button>
+                  <button class="btn" data-action="return_monitoring">Return to Monitoring</button>
+                  <button class="btn" data-action="close_case">Close No Finding</button>
+                </div>
+              </section>
             </div>
 
             <div class="layout-grid">
@@ -337,6 +351,8 @@
     </div>
 
     <script src="js/data.js"></script>
+    <script src="js/copy.js"></script>
+    <script src="js/next-steps.js"></script>
     <script src="js/demo-fixtures.js"></script>
     <script src="js/engine.js"></script>
     <script src="js/visualizations.js"></script>
