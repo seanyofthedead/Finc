@@ -49,18 +49,22 @@ describe("OCC BSA/AML retarget", () => {
     expect(lower.length).toBeGreaterThanOrEqual(1);
   });
 
-  it("marks the synthetic 10-case review-balance monitor as sample limited, not red", () => {
+  it("shows the synthetic 10-case routing balance as a color flagged indicative, not a bare claim", () => {
     const engine = window.FinCENEngine.buildEngine(window.FinCENData);
     const status = window.FinCENEngine.computeReviewBalance(
       engine.getRouting().results,
       window.FinCENData.entities
     );
 
-    expect(status.label).toBe("Sample Limited");
-    expect(status.className).toBe("risk-medium");
-    expect(status.isSampleLimited).toBe(true);
-    expect(status.detail).toContain("Synthetic demo sample is too small");
+    // MP-06: the routing-skew stoplight surfaces a real color (the demo's
+    // 10 cases route at most 50% into any one group -> Green), but the small
+    // synthetic sample is flagged "indicative" so it never overclaims.
+    expect(["Red", "Amber", "Green"]).toContain(status.label);
+    expect(status.indicative).toBe(true);
+    expect(status.caveat).toMatch(/synthetic/i);
     expect(status.rows.length).toBeGreaterThan(0);
+    expect(status.rows[0]).toHaveProperty("destination");
+    expect(status.rows[0]).toHaveProperty("share");
   });
 
   it("keeps prepared demo scripts in the OCC supervisory voice", () => {
