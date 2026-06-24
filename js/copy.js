@@ -64,6 +64,19 @@
         "Consider testing the related SAR/CTR filing for completeness, reconciliation, and timeliness.",
       documentAndMonitor:
         "Consider documenting the review rationale and returning the exception to routine monitoring."
+    },
+
+    // MP-06: Review Balance stoplight (Governance Controls panel). Wording is
+    // SME-editable; the underlying thresholds live in js/config.js.
+    REVIEW_BALANCE: {
+      // One-line plain-language read on each stoplight color.
+      SUMMARY: {
+        Green: "Routing is spread across review destinations.",
+        Amber: "Routing leans toward one review destination.",
+        Red: "Routing is concentrated in a single review destination."
+      },
+      // Heading above the per-destination breakdown in the drill-down.
+      BREAKDOWN_HEADING: "Cases by routing destination"
     }
   };
 })();

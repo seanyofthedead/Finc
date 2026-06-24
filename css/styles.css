@@ -2123,6 +2123,67 @@ input[type="number"]:focus {
   display: block;
 }
 
+/* MP-06: Review Balance routing-distribution breakdown. */
+.balance-caveat {
+  margin-top: 6px;
+  font-style: italic;
+  color: var(--text-tertiary, var(--text-secondary));
+}
+
+.balance-breakdown-heading {
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.68rem;
+  color: var(--text-secondary);
+}
+
+.balance-row {
+  display: grid;
+  grid-template-columns: 1fr 80px auto;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0;
+}
+
+.balance-row-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.balance-bar {
+  display: block;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--rule-hair);
+  overflow: hidden;
+}
+
+.balance-bar-fill {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--text-secondary);
+}
+
+.balance-bar-fill.risk-low {
+  background: #6ca678;
+}
+
+.balance-bar-fill.risk-medium {
+  background: #ddb361;
+}
+
+.balance-bar-fill.risk-high {
+  background: #e6695c;
+}
+
+.balance-row-value {
+  text-align: right;
+  white-space: nowrap;
+}
+
 .module-layout {
   display: grid;
   grid-template-columns: 1fr auto 1fr;

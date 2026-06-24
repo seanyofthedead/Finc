@@ -685,11 +685,7 @@
     window.FinCENViz.drawScatter(ui.triageScatterCanvas, routing.results, policy);
     updateTabBadges(routing);
     renderKPIStrip(routing);
-    ui.kpiBias.textContent = window.FinCENEngine.computeReviewBalance(
-      routing.results,
-      data.entities,
-      { highRiskThreshold: policy.highRiskThreshold }
-    ).label;
+    ui.kpiBias.textContent = window.FinCENEngine.computeReviewBalance(routing.results).label;
   }
 
   function updateTabBadges(routing) {
@@ -933,22 +929,34 @@
   }
 
   function renderBiasIndicator() {
-    const status = window.FinCENEngine.computeReviewBalance(
-      engine.getRouting().results,
-      data.entities,
-      { highRiskThreshold: engine.getState().policy.highRiskThreshold }
-    );
+    const status = window.FinCENEngine.computeReviewBalance(engine.getRouting().results);
+    const copy = (window.FinCENCopy && window.FinCENCopy.REVIEW_BALANCE) || {};
+    const summary = (copy.SUMMARY && copy.SUMMARY[status.label]) || status.detail;
+    const heading = copy.BREAKDOWN_HEADING || "Cases by routing destination";
+
     ui.biasIndicator.className = "pill " + status.className;
     ui.biasIndicator.textContent = status.label;
     ui.kpiBias.textContent = ui.biasIndicator.textContent;
-    ui.biasDetail.innerHTML =
-      "<div>" + status.detail + "</div>" +
-      "<div class='spacer-sm'></div>" +
-      status.rows.map((r) => {
-        const pct = Math.round(r.rate * 100);
-        return r.jurisdiction + ": " + pct + "% high-risk (" + r.high + "/" + r.total + ")";
+
+    const bars = status.rows
+      .map((r) => {
+        const pct = Math.round(r.share * 100);
+        return (
+          "<div class='balance-row'>" +
+          "<span class='balance-row-label'>" + r.destination + "</span>" +
+          "<span class='balance-bar' aria-hidden='true'><span class='balance-bar-fill " + status.className + "' style='width:" + pct + "%'></span></span>" +
+          "<span class='balance-row-value'>" + pct + "% (" + r.count + ")</span>" +
+          "</div>"
+        );
       })
-      .join("<br/>");
+      .join("");
+
+    ui.biasDetail.innerHTML =
+      "<div>" + summary + "</div>" +
+      (status.caveat ? "<div class='balance-caveat'>" + status.caveat + "</div>" : "") +
+      "<div class='spacer-sm'></div>" +
+      "<div class='balance-breakdown-heading'>" + heading + "</div>" +
+      bars;
   }
 
   function bindWorkspaceActions() {
@@ -982,6 +990,13 @@
 
     ui.biasIndicator.addEventListener("click", () => {
       ui.biasDetail.classList.toggle("active");
+    });
+
+    ui.biasIndicator.addEventListener("keydown", (ev) => {
+      if (ev.key === "Enter" || ev.key === " ") {
+        ev.preventDefault();
+        ui.biasDetail.classList.toggle("active");
+      }
     });
 
     ui.confirmNoBtn.addEventListener("click", () => {

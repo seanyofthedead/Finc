@@ -121,14 +121,16 @@ Remove raw math (means, standard deviations, “mean × 4.3”-style multipliers
 
 **Tasks**
 
-- [ ] Generate synthetic case-routing data (destination group per case: intelligence, law enforcement, etc.) if it doesn’t exist.
-- [ ] Implement red/yellow/green logic on routing distribution skew. Placeholder thresholds in config, e.g.: any group > 70% of routed cases → red; > 50% → yellow; else green. Flag thresholds with a `# TODO: validate with SME (L. Arquette)` comment.
-- [ ] Replace the static “sample limited” text with the stoplight component.
-- [ ] Click/hover reveals the underlying distribution (simple bar or percentage breakdown).
+- [x] Generate synthetic case-routing data (destination group per case: intelligence, law enforcement, etc.) if it doesn’t exist. _(Already present — routing destinations come from `computeRouting`/`routeCase` in `js/engine.js`.)_
+- [x] Implement red/yellow/green logic on routing distribution skew. Placeholder thresholds in config, e.g.: any group > 70% of routed cases → red; > 50% → yellow; else green. Flag thresholds with a `# TODO: validate with SME (L. Arquette)` comment. _(`reviewBalanceThresholds` in `js/config.js`; `computeReviewBalance` rewritten to routing-skew.)_
+- [x] Replace the static “sample limited” text with the stoplight component. _(Color always shown; small samples flagged "Indicative" rather than suppressed — per "Color + sample caveat" decision.)_
+- [x] Click/hover reveals the underlying distribution (simple bar or percentage breakdown). _(Clicking/Enter on the Review Balance pill toggles a per-destination bar breakdown.)_
 
 **Acceptance criteria**
 
-- Stoplight renders from data, not hardcoded; drill-down shows the distribution; thresholds documented in config.
+- Stoplight renders from data, not hardcoded; drill-down shows the distribution; thresholds documented in config. ✅
+
+**Implementation note:** "Review Balance" was redefined from jurisdiction high-risk spread to routing-distribution skew (share of routed cases in the single most-used destination queue). On the 10-case demo the top group is exactly 50% → **Green**, flagged indicative on the synthetic sample. Tests: `tests/unit/review-balance.test.js` (new) + updated guard in `tests/unit/occ-retarget.test.js`.
 
 -----
 

@@ -169,62 +169,75 @@
     return { results, queues };
   }
 
+  // MP-06: Review Balance stoplight. Measures routing-distribution skew — the
+  // share of routed cases that land in the single most-used destination queue.
+  // A dominant queue means examiner review is concentrating into one
+  // disposition, which is a governance signal distinct from any per-case risk
+  // score. Thresholds are placeholders pending SME review (see js/config.js).
   function computeReviewBalance(routingResults, entities, options) {
     const opts = options || {};
-    const minTotalCases = opts.minTotalCases || 30;
-    const minJurisdictionCases = opts.minJurisdictionCases || 3;
-    const minQualifiedJurisdictions = opts.minQualifiedJurisdictions || 2;
-    const highRiskThreshold = opts.highRiskThreshold || 85;
-    const entityById = indexById(entities || []);
-    const byJurisdiction = {};
+    const config = (typeof window !== "undefined" && window.FinCENConfig && window.FinCENConfig.reviewBalanceThresholds) || {};
+    const redShare = pick(opts.redShare, config.red, 0.7);
+    const amberShare = pick(opts.amberShare, config.amber, 0.5);
+    const minMeaningfulSample = pick(opts.minMeaningfulSample, config.minMeaningfulSample, 30);
 
-    (routingResults || []).forEach((r) => {
-      const entity = entityById[r.entityId];
-      const jurisdiction = entity ? entity.jurisdiction : "Unknown";
-      byJurisdiction[jurisdiction] = byJurisdiction[jurisdiction] || { high: 0, total: 0 };
-      byJurisdiction[jurisdiction].total += 1;
-      if (r.riskScore >= highRiskThreshold) {
-        byJurisdiction[jurisdiction].high += 1;
-      }
+    const results = routingResults || [];
+    const total = results.length;
+
+    const counts = {};
+    results.forEach((r) => {
+      const dest = r.destination || "Unrouted";
+      counts[dest] = (counts[dest] || 0) + 1;
     });
 
-    const rows = Object.keys(byJurisdiction)
-      .sort()
-      .map((jurisdiction) => {
-        const item = byJurisdiction[jurisdiction];
-        return {
-          jurisdiction,
-          high: item.high,
-          total: item.total,
-          rate: item.high / Math.max(1, item.total)
-        };
-      });
+    const rows = Object.keys(counts)
+      .map((destination) => ({
+        destination,
+        count: counts[destination],
+        share: total ? counts[destination] / total : 0
+      }))
+      .sort((a, b) => b.count - a.count || a.destination.localeCompare(b.destination));
 
-    const rates = rows.map((r) => r.rate);
-    const spread = rates.length ? Math.max.apply(null, rates) - Math.min.apply(null, rates) : 0;
-    const qualifiedJurisdictions = rows.filter((r) => r.total >= minJurisdictionCases).length;
-    const isSampleLimited = (routingResults || []).length < minTotalCases || qualifiedJurisdictions < minQualifiedJurisdictions;
+    const topShare = rows.length ? rows[0].share : 0;
+    const topGroup = rows.length ? rows[0].destination : null;
 
-    if (isSampleLimited) {
-      return {
-        label: "Sample Limited",
-        className: "risk-medium",
-        isSampleLimited: true,
-        spread,
-        rows,
-        detail: "Synthetic demo sample is too small for jurisdiction-balance conclusions."
-      };
+    let label = "Green";
+    let className = "risk-low";
+    if (topShare > redShare) {
+      label = "Red";
+      className = "risk-high";
+    } else if (topShare > amberShare) {
+      label = "Amber";
+      className = "risk-medium";
     }
 
-    const label = spread < 0.25 ? "Green" : spread < 0.45 ? "Amber" : "Red";
+    const indicative = total < minMeaningfulSample;
+    const detail = topGroup
+      ? "Most-used routing destination: " + topGroup + " (" + Math.round(topShare * 100) + "% of routed cases)."
+      : "No cases routed yet.";
+
     return {
       label,
-      className: spread < 0.25 ? "risk-low" : spread < 0.45 ? "risk-medium" : "risk-high",
-      isSampleLimited: false,
-      spread,
+      className,
+      topGroup,
+      topShare,
       rows,
-      detail: "Jurisdiction high-risk routing spread is " + Math.round(spread * 100) + " percentage points."
+      total,
+      indicative,
+      detail,
+      caveat: indicative
+        ? "Indicative only — based on a synthetic " + total + "-case sample."
+        : ""
     };
+  }
+
+  // Returns the first defined, non-null candidate; used for option/config/default
+  // threshold resolution where 0 is a legitimate value (so `||` won't do).
+  function pick() {
+    for (let i = 0; i < arguments.length; i += 1) {
+      if (arguments[i] !== undefined && arguments[i] !== null) return arguments[i];
+    }
+    return undefined;
   }
 
   function buildGraph(data) {
